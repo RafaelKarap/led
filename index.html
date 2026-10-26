@@ -1,243 +1,452 @@
 <!doctype html>
-<html lang="el">
+<html lang="el" data-theme="night">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#e8ecef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#151b22" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#151b22">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Ταινίες LED">
-<title>Ταινίες LED</title>
+<meta name="apple-mobile-web-app-title" content="Σπίτι">
+<title>Σπίτι</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#e8ecef;--surface:#f7f9fa;--surface-2:#dce2e7;--ink:#17202b;--muted:#5a6675;--line:#cdd5dc;--accent:#3b78d6;--danger:#b8432c;color-scheme:light;font-family:Commissioner,"Segoe UI",Roboto,system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151b22;--surface:#1f2730;--surface-2:#2b343f;--ink:#eef2f5;--muted:#95a2b0;--line:#333d49;--accent:#71a5f2;--danger:#e57a64;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#151b22;--surface:#1f2730;--surface-2:#2b343f;--ink:#eef2f5;--muted:#95a2b0;--line:#333d49;--accent:#71a5f2;--danger:#e57a64;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="night"]{--bg:#151b22;--bg-img:none;--surface:#1f2730;--surface-2:#2b343f;--ink:#eef2f5;--muted:#9aa7b5;--line:#333d49;--on:#3d321a;--on-ink:#eef2f5;--on-muted:#d4c39b;--icon-on:#f2b33a;--icon-on-ink:#2b1f04;--glow:0 0 0 6px rgba(242,179,58,.22);--cool:#1d3150;--cool-muted:#b9cdea;--cool-icon:#71a5f2;--accent:#f2b33a;--radius:22px;--font:Commissioner,"Segoe UI",Roboto,system-ui,sans-serif;--card-border:transparent;--card-shadow:none;--on-shadow:none;--pill:#eef2f5;--pill-ink:#151b22;--fs:1;color-scheme:dark}
+:root[data-theme="day"]{--bg:#eef1f4;--bg-img:none;--surface:#ffffff;--surface-2:#e3e8ed;--ink:#17202b;--muted:#566272;--line:#d3dae1;--on:#fff1cf;--on-ink:#17202b;--on-muted:#6b5520;--icon-on:#e9a21c;--icon-on-ink:#2b1f04;--glow:0 0 0 6px rgba(233,162,28,.2);--cool:#dbe8fb;--cool-muted:#2f4f7f;--cool-icon:#2f6fd0;--accent:#2f6fd0;--radius:22px;--font:Commissioner,"Segoe UI",Roboto,system-ui,sans-serif;--card-border:transparent;--card-shadow:0 1px 2px rgba(23,32,43,.06);--on-shadow:none;--pill:#17202b;--pill-ink:#ffffff;--fs:1;color-scheme:light}
+:root[data-theme="fantasy"]{--bg:#e9dab5;--bg-img:radial-gradient(ellipse at 20% 8%,rgba(255,250,235,.65),transparent 50%),radial-gradient(ellipse at 85% 95%,rgba(120,80,30,.2),transparent 55%),radial-gradient(circle at 50% 50%,transparent 62%,rgba(90,60,20,.32) 100%);--surface:rgba(250,242,222,.72);--surface-2:#efe2c4;--ink:#2b1d0e;--muted:#5e4524;--line:#a87a22;--on:#2b1d0e;--on-ink:#f6ecd2;--on-muted:#e2cc98;--icon-on:radial-gradient(circle at 40% 35%,#ffe2a0,#f0a03c 55%,#a8451c);--icon-on-ink:#2b1d0e;--glow:0 0 20px 5px rgba(255,170,60,.55);--cool:#2b1d0e;--cool-muted:#e2cc98;--cool-icon:radial-gradient(circle at 40% 35%,#d8ecff,#6aa0d8 55%,#2a4f7a);--accent:#7a2418;--radius:6px;--font:"EB Garamond",Georgia,serif;--card-border:#a87a22;--card-shadow:inset 0 0 0 3px #f6ecd2,inset 0 0 0 4px rgba(168,122,34,.5);--on-shadow:inset 0 0 0 3px #2b1d0e,inset 0 0 0 4px rgba(214,170,80,.7);--pill:#2b1d0e;--pill-ink:#f6ecd2;--fs:1.12;color-scheme:light}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent;min-height:100vh}
-button,input,select{font:inherit;color:inherit}
+body{background-color:var(--bg);background-image:var(--bg-img);background-attachment:fixed;color:var(--ink);font-family:var(--font);font-size:calc(16px*var(--fs));line-height:1.45;-webkit-tap-highlight-color:transparent;min-height:100vh;transition:background-color .3s}
+button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:2rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:4px 0 6px}
-.lead{color:var(--muted);margin:0 0 18px}
-.primary{width:100%;border:0;border-radius:16px;padding:15px;font-weight:600;background:var(--ink);color:var(--bg)}
-.link{background:none;border:0;color:var(--accent);padding:10px 0;font-size:.92rem}
-.notice{background:var(--surface);border-radius:18px;padding:16px;color:var(--muted);font-size:.95rem}
-.notice b{color:var(--ink)}
-.all{display:flex;gap:8px;margin:18px 0 4px}
-.all button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px;font-weight:500}
-.strip{background:var(--surface);border-radius:22px;padding:16px;margin-top:14px}
-.glow{height:12px;border-radius:6px;background:var(--surface-2);margin-bottom:16px;transition:background .3s,box-shadow .3s}
-.head{display:flex;align-items:center;gap:10px}
-.head .nm{flex:1;min-width:0}
-.head .nm input{width:100%;border:0;background:transparent;font-weight:600;font-size:1.1rem;padding:0}
-.head .st{color:var(--muted);font-size:.85rem}
-.sw{width:56px;height:34px;border-radius:17px;border:0;background:var(--surface-2);position:relative;flex:none}
-.sw::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--surface);transition:transform .2s}
-.sw[aria-pressed="true"]{background:var(--accent)}
-.sw[aria-pressed="true"]::after{transform:translateX(22px)}
-.sw:disabled{opacity:.4}
-.body{margin-top:14px}
-.body[hidden]{display:none}
-.sw-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:4px 0 14px}
+.wrap{max-width:760px;margin:0 auto;padding:22px 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-size:calc(32px*var(--fs));line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:4px 0 6px}
+.summary{color:var(--muted);margin:0}
+.summary b{color:var(--ink);font-weight:600}
+.iconbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--card-border);background:var(--surface);color:var(--ink);display:grid;place-items:center;flex:none}
+.iconbtn svg{width:22px;height:22px}
+.status{margin-top:14px;padding:12px 14px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:.92em;display:flex;gap:10px;align-items:center}
+.status button{margin-left:auto;border:0;background:var(--pill);color:var(--pill-ink);border-radius:12px;padding:8px 12px;font-weight:600;flex:none}
+.scroller{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px}
+.scroller::-webkit-scrollbar{display:none}
+.scenes{margin-top:20px}
+.scene{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-weight:500}
+.scene svg{width:18px;height:18px;color:var(--accent)}
+.rooms{margin-top:14px;position:sticky;top:env(safe-area-inset-top,0px);background-color:var(--bg);z-index:5;padding-top:8px;padding-bottom:8px}
+.chip{flex:none;border:0;border-radius:999px;padding:8px 16px;background:transparent;color:var(--muted);font-weight:500}
+.chip[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
+section{margin-top:22px}
+.roomhead{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 10px}
+.roomhead h2{font-size:1.15em;margin:0;font-weight:600}
+.roomhead span{color:var(--muted);font-size:.9em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:14px;min-height:124px;padding:14px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--card-border);box-shadow:var(--card-shadow);text-align:left;overflow:hidden}
+.tile.wide{grid-column:1/-1;min-height:0}
+.tile .ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:0;color:var(--muted);flex:none}
+:root[data-theme="fantasy"] .tile .ic{background:transparent;border:1.5px solid #6b4f2a}
+.tile .ic svg{width:22px;height:22px}
+.tile .name{font-weight:600;font-size:.98em;line-height:1.25}
+.tile .st{color:var(--muted);font-size:.86em;margin-top:2px}
+:root[data-theme="fantasy"] .tile .st{font-style:italic}
+.tile.on{background:var(--on);color:var(--on-ink);box-shadow:var(--on-shadow)}
+.tile.on .st{color:var(--on-muted)}
+.tile.on .ic{background:var(--icon-on);color:var(--icon-on-ink);box-shadow:var(--glow);border:0}
+.tile.cool{background:var(--cool);color:var(--on-ink);box-shadow:var(--on-shadow)}
+:root[data-theme="day"] .tile.cool{color:var(--ink)}
+.tile.cool .st{color:var(--cool-muted)}
+.tile.cool .ic{background:var(--cool-icon);color:#0f1d33;box-shadow:0 0 0 6px rgba(113,165,242,.2);border:0}
+.tile.off-line{opacity:.55}
+.tile .more{position:absolute;top:12px;right:10px;width:28px;height:28px;color:inherit;opacity:.6;display:grid;place-items:center}
+.tile .more svg{width:18px;height:18px}
+.tile .bar{position:absolute;left:14px;right:14px;top:0;height:5px;border-radius:0 0 4px 4px}
+.prog{display:block;height:8px;border-radius:4px;background:rgba(127,140,160,.3);overflow:hidden}
+.prog span{display:block;height:100%;background:var(--cool-icon)}
+.wrow{display:flex;align-items:center;gap:14px}
+.wrow .big{margin-left:auto;font-size:1.3em;font-weight:700}
+.empty{background:var(--surface);border-radius:var(--radius);padding:24px;color:var(--muted);text-align:center;margin-top:22px}
+dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:90vh;background-color:var(--bg);background-image:var(--bg-img);color:var(--ink);border-radius:26px 26px 0 0}
+dialog::backdrop{background:rgb(10 14 20/.5)}
+dialog[open]{animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.sheet{padding:10px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h3{margin:0;font-size:1.4em;font-weight:700}
+.sheet .sub{color:var(--muted);margin:2px 0 18px}
+.bigt{font-size:3.4em;font-weight:700;letter-spacing:-.03em;text-align:center;margin:6px 0;line-height:1}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pill{border:1px solid var(--card-border);background:var(--surface);border-radius:14px;padding:12px 16px;font-weight:500;min-width:64px}
+.pill[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
+.round{width:60px;height:60px;border-radius:50%;border:1px solid var(--card-border);background:var(--surface);display:grid;place-items:center}
+.round svg{width:24px;height:24px}
+.ctl{margin:16px 0}
+.ctl label{display:flex;justify-content:space-between;color:var(--muted);font-size:.9em;margin-bottom:4px}
+input[type=range]{width:100%;height:40px;accent-color:var(--accent)}
+.power{width:100%;margin-top:18px;border:0;border-radius:16px;padding:15px;font-weight:600;background:var(--pill);color:var(--pill-ink)}
+.secondary{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:16px;padding:14px;background:transparent;font-weight:500}
+.field{display:block;margin:12px 0}
+.field span{display:block;font-size:.9em;color:var(--muted);margin-bottom:6px}
+.field input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.help{color:var(--muted);font-size:.86em;margin:6px 0 0;line-height:1.5}
+.err{color:#c4462f;font-size:.9em;min-height:1.2em;margin:6px 0 0}
+.sect{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.sect h4{margin:0 0 10px;font-size:1em}
+.dots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin:6px 0 4px}
 .dot{aspect-ratio:1;border-radius:50%;border:2px solid transparent}
 .dot[aria-pressed="true"]{border-color:var(--ink)}
 .picker{position:relative;overflow:hidden;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
 .picker input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;padding:0}
-.ctl{margin:6px 0 12px}
-.ctl label{display:flex;justify-content:space-between;color:var(--muted);font-size:.88rem;margin-bottom:2px}
-input[type=range]{width:100%;height:40px;-webkit-appearance:none;appearance:none;background:transparent}
-input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--surface-2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-7px;border-radius:50%;background:var(--ink);border:3px solid var(--surface)}
-input[type=range]::-moz-range-track{height:12px;border-radius:6px;background:var(--surface-2)}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ink);border:3px solid var(--surface)}
 .fx{display:flex;align-items:center;gap:8px}
-.fx button{width:44px;height:44px;border-radius:12px;border:0;background:var(--surface-2);font-size:1.2rem}
+.fx button{width:44px;height:44px;border-radius:12px;border:1px solid var(--card-border);background:var(--surface);font-size:1.2em}
 .fx .num{flex:1;text-align:center;font-weight:600}
-.fx .num small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
-.foot{display:flex;justify-content:space-between;margin-top:6px}
-.foot button{background:none;border:0;color:var(--muted);font-size:.88rem;padding:8px 0}
-.foot .danger{color:var(--danger)}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:14px;font-size:.92rem;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
+.list{display:flex;flex-direction:column;gap:8px}
+.list .it{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--card-border)}
+.list .it button{margin-left:auto;border:0;background:transparent;color:#c4462f;font-weight:500}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--pill);color:var(--pill-ink);padding:11px 18px;border-radius:14px;font-size:.92em;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Ταινίες LED</h1>
-  <p class="lead" id="lead">Έλεγχος μέσω Bluetooth, χωρίς την εφαρμογή duoCo.</p>
-  <div id="unsupported" class="notice" hidden></div>
-  <div id="app">
-    <button class="primary" id="addBtn">Προσθήκη ταινίας</button>
-    <button class="link" id="addAllBtn">Δεν εμφανίζεται; Δείξε όλες τις συσκευές Bluetooth</button>
-    <div class="all" id="allRow" hidden>
-      <button data-all="on">Άναψε όλες</button>
-      <button data-all="off">Σβήσε όλες</button>
+  <header class="top">
+    <div>
+      <h1 id="greet">Καλησπέρα</h1>
+      <p class="summary" id="summary"></p>
     </div>
-    <div id="list"></div>
-    <p class="notice" id="tip" style="margin-top:18px">Κλείσε πρώτα την εφαρμογή duoCo (και από τις πρόσφατες εφαρμογές), γιατί κάθε ταινία δέχεται <b>μία σύνδεση τη φορά</b>.</p>
-  </div>
+    <button class="iconbtn" id="settingsBtn" aria-label="Ρυθμίσεις"></button>
+  </header>
+  <div class="status" id="status" hidden><span id="statusText"></span><button id="statusBtn">Ρυθμίσεις</button></div>
+  <div class="scroller scenes" id="scenes" hidden></div>
+  <div class="scroller rooms" id="rooms" role="toolbar" aria-label="Δωμάτια"></div>
+  <main id="main"></main>
 </div>
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
 <div class="toast" id="toast" role="status"></div>
 <script>
-const SVC='0000fff0-0000-1000-8000-00805f9b34fb',CHR='0000fff3-0000-1000-8000-00805f9b34fb';
-const COLORS=['#ff0000','#ff7a00','#ffd400','#00ff00','#00e5ff','#0033ff','#b000ff','#ff00a0','#ffffff','#ffb36b','#ff4d4d','#7cff9a','#6b8cff'];
-const $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const strips=new Map();
-let saved=store.get('led.strips',{});
-
-const hex=v=>v.toString(16).padStart(2,'0');
-const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
-const F={
-  power:on=>on?[0x7e,4,4,1,0,1,0xff,0,0xef]:[0x7e,4,4,0,0,0,0xff,0,0xef],
-  color:h=>{const[r,g,b]=rgb(h);return[0x7e,7,5,3,r,g,b,0x10,0xef]},
-  bright:v=>[0x7e,4,1,v,0xff,0xff,0xff,0,0xef],
-  speed:v=>[0x7e,4,2,v,0xff,0xff,0xff,0,0xef],
-  effect:id=>[0x7e,5,3,id,6,0xff,0xff,0,0xef]
+const I={
+light:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+switch:'<path d="M3 12h18M5 12c0-4 3-7 7-7s7 3 7 7M12 12v7M8 19h8"/>',
+fan:'<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C12 6 13 3 15.5 3 18 3 18 7 13.4 11M13.6 12c4.4 0 7.4 1 7.4 3.5S17 18 13 13.4M12 13.6c0 4.4-1 7.4-3.5 7.4S6 17 10.6 13M10.4 12C6 12 3 11 3 8.5S7 6 11 10.6"/>',
+climate:'<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
+vacuum:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/>',
+washer:'<rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="13" r="5"/><path d="M8 6h.01M11 6h.01"/>',
+led:'<rect x="2" y="9" width="20" height="6" rx="3"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/>',
+scene:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+dots:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+up:'<path d="M12 5v14M5 12h14"/>',down:'<path d="M5 12h14"/>',
+play:'<path d="M7 4v16l13-8z"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
 };
+const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||I.switch}</svg>`;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
+const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
+const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό'];
+const DOMS=['light','switch','climate','vacuum','fan'];
+const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
+const VAC={cleaning:'Καθαρίζει',docked:'Στη βάση',returning:'Επιστρέφει',idle:'Αδρανής',paused:'Σε παύση',error:'Σφάλμα',unavailable:'Μη διαθέσιμη'};
+const JOB={wash:'Πλύση',washing:'Πλύση',rinse:'Ξέβγαλμα',rinsing:'Ξέβγαλμα',spin:'Στύψιμο',spinning:'Στύψιμο',drying:'Στέγνωμα',finish:'Τελείωσε',finished:'Τελείωσε',weight_sensing:'Ζύγισμα',pre_wash:'Πρόπλυση',delay_wash:'Καθυστέρηση',none:''};
+const S={cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
-function persist(s){saved[s.id]={name:s.name,on:s.on,color:s.color,bri:s.bri,effect:s.effect,speed:s.speed};store.set('led.strips',saved)}
-
-function check(){
-  const u=$('#unsupported');
-  if(!window.isSecureContext){u.hidden=false;u.innerHTML='Η σελίδα πρέπει να ανοίξει από διεύθυνση <b>https://</b> για να επιτρέψει ο Chrome το Bluetooth.';$('#app').hidden=true;return false}
-  if(!navigator.bluetooth){u.hidden=false;u.innerHTML='Αυτός ο browser δεν υποστηρίζει Bluetooth. Άνοιξε τη σελίδα στον <b>Chrome</b> σε Android και έλεγξε ότι είναι ενημερωμένος.';$('#app').hidden=true;return false}
-  return true;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
+function applyTheme(){
+  let t=S.theme;if(t==='auto'){const h=new Date().getHours();t=h>=7&&h<19?'day':'night'}
+  document.documentElement.dataset.theme=t;
+  document.querySelector('meta[name="theme-color"]').content={night:'#151b22',day:'#eef1f4',fantasy:'#e9dab5'}[t];
 }
+function setStatus(kind,msg){const el=$('#status');if(kind==='ok'){el.hidden=true;return}el.hidden=false;$('#statusText').textContent=kind==='connecting'?'Σύνδεση με το σπίτι…':msg}
 
-async function add(all){
+function connect(){
+  const {url,token}=S.cfg;
+  if(!url||!token){setStatus('error','Λείπει το token του Home Assistant.');return}
+  if(S.ws){S.ws.onclose=null;try{S.ws.close()}catch(e){}}
+  setStatus('connecting');
+  let ws;try{ws=new WebSocket(url.replace(/\/+$/,'').replace(/^http/i,'ws')+'/api/websocket')}catch(e){setStatus('error','Η διεύθυνση δεν είναι σωστή.');return}
+  S.ws=ws;let n=1;const reqs={};
+  S.send=m=>new Promise((res,rej)=>{const id=n++;reqs[id]={res,rej};ws.send(JSON.stringify({...m,id}))});
+  ws.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.type==='auth_required')ws.send(JSON.stringify({type:'auth',access_token:token}));
+    else if(m.type==='auth_invalid'){ws.onclose=null;ws.close();S.live=false;setStatus('error','Το token δεν έγινε δεκτό. Βάλε νέο στις ρυθμίσεις.')}
+    else if(m.type==='auth_ok')boot();
+    else if(m.type==='result'&&reqs[m.id]){m.success?reqs[m.id].res(m.result):reqs[m.id].rej(m.error);delete reqs[m.id]}
+    else if(m.type==='event'&&m.event&&m.event.event_type==='state_changed'){const d=m.event.data;if(d.new_state)S.st.set(d.entity_id,d.new_state);else S.st.delete(d.entity_id);schedule()}
+  };
+  ws.onclose=()=>{S.live=false;setStatus('error','Δεν υπάρχει σύνδεση με το σπίτι. Είναι ανοιχτό το Tailscale;');render();clearTimeout(S.retry);S.retry=setTimeout(connect,6000)};
+}
+async function boot(){
   try{
-    const opts=all?{acceptAllDevices:true,optionalServices:[SVC]}:{filters:[{namePrefix:'MELK'},{namePrefix:'ELK'},{namePrefix:'OA21'},{services:[SVC]}],optionalServices:[SVC]};
-    const dev=await navigator.bluetooth.requestDevice(opts);
-    await attach(dev);
-  }catch(e){if(e.name!=='NotFoundError')toast(msg(e))}
+    const [st,ar,en,dv]=await Promise.allSettled([S.send({type:'get_states'}),S.send({type:'config/area_registry/list'}),S.send({type:'config/entity_registry/list'}),S.send({type:'config/device_registry/list'})]);
+    if(st.status!=='fulfilled')throw 0;
+    S.st=new Map(st.value.map(x=>[x.entity_id,x]));
+    S.areas=new Map(ar.status==='fulfilled'?ar.value.map(a=>[a.area_id,a.name]):[]);
+    S.reg=new Map(en.status==='fulfilled'?en.value.map(r=>[r.entity_id,r]):[]);
+    S.dev=new Map(dv.status==='fulfilled'?dv.value.map(d=>[d.id,d]):[]);
+    await S.send({type:'subscribe_events',event_type:'state_changed'});
+    S.live=true;setStatus('ok');render();
+  }catch(e){setStatus('error','Συνδέθηκε, αλλά δεν διαβάστηκαν οι συσκευές.')}
 }
-function msg(e){
-  if(e&&e.name==='NetworkError')return 'Δεν έγινε σύνδεση. Κλείσε την εφαρμογή duoCo και ξαναδοκίμασε.';
-  if(e&&e.name==='NotFoundError')return 'Η συσκευή δεν βρέθηκε. Είναι αναμμένη και κοντά;';
-  if(e&&e.name==='SecurityError')return 'Ο Chrome δεν επέτρεψε Bluetooth σε αυτή τη σελίδα.';
-  return 'Κάτι πήγε στραβά: '+(e&&e.message||e);
+function schedule(){if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
+async function call(dom,svc,id,data={}){
+  if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');return}
+  try{await S.send({type:'call_service',domain:dom,service:svc,service_data:data,target:{entity_id:id}})}
+  catch(e){toast('Η εντολή δεν εκτελέστηκε'+(e&&e.message?': '+e.message:''))}
 }
-async function attach(dev){
-  const prev=saved[dev.id]||{};
-  let s=strips.get(dev.id);
-  if(!s){
-    s={id:dev.id,dev,char:null,name:prev.name||dev.name||'Ταινία',on:prev.on??true,color:prev.color||'#0033ff',bri:prev.bri??100,effect:prev.effect??0,speed:prev.speed??50,state:'idle',q:Promise.resolve(),open:false};
-    strips.set(dev.id,s);
-    dev.addEventListener('gattserverdisconnected',()=>{s.char=null;s.state='lost';render()});
+
+function hidden(r){return r&&(r.hidden_by||r.disabled_by||r.entity_category)}
+function areaOf(id){const r=S.reg.get(id);if(!r)return null;return r.area_id||(S.dev.get(r.device_id)||{}).area_id||null}
+function areaName(a){if(!a)return 'Άλλα';const n=S.areas.get(a)||a;return AREA_GR[n.toLowerCase()]||n}
+function sameDev(devId,re){for(const [id,r] of S.reg){if(r.device_id===devId&&re.test(id)&&S.st.has(id))return S.st.get(id)}return null}
+function devBattery(id){const r=S.reg.get(id);if(!r||!r.device_id)return null;for(const [eid,rr] of S.reg){if(rr.device_id===r.device_id&&eid.startsWith('sensor.')){const s=S.st.get(eid);if(s&&s.attributes.device_class==='battery')return s.state}}return null}
+function cards(){
+  const out=[],washers=new Set();
+  if(S.live){
+    for(const [id] of S.st){
+      const r=S.reg.get(id);if(hidden(r))continue;
+      if(/^sensor\..*machine_state$/.test(id)&&r&&r.device_id&&!washers.has(r.device_id)){
+        washers.add(r.device_id);const d=S.dev.get(r.device_id)||{};
+        out.push({kind:'washer',id,dev:r.device_id,area:areaName(areaOf(id)),name:d.name_by_user||d.name||'Πλυντήριο'});
+      }
+    }
+    for(const [id,s] of S.st){
+      const dom=id.split('.')[0];if(!DOMS.includes(dom))continue;
+      const r=S.reg.get(id);if(hidden(r))continue;
+      if(r&&r.device_id&&washers.has(r.device_id))continue;
+      out.push({kind:dom,id,area:areaName(areaOf(id)),name:s.attributes.friendly_name||id});
+    }
   }
-  persist(s);render();
-  await connect(s);
+  for(const st of S.strips.values())out.push({kind:'led',id:'led:'+st.id,area:'Σαλόνι',name:st.name});
+  return out;
 }
-async function connect(s){
-  s.state='connecting';render();
-  try{
-    const srv=await s.dev.gatt.connect();
-    const svc=await srv.getPrimaryService(SVC);
-    s.char=await svc.getCharacteristic(CHR);
-    s.state='ready';render();toast(`Συνδέθηκε: ${s.name}`);
-  }catch(e){s.char=null;s.state='lost';render();toast(msg(e))}
+function washerInfo(c){
+  const m=S.st.get(c.id),job=sameDev(c.dev,/job_state$/),comp=sameDev(c.dev,/completion_time$/);
+  const run=m&&['run','running'].includes(m.state),pause=m&&m.state==='pause';
+  let mins=null;if(comp&&run){const t=Date.parse(comp.state);if(!isNaN(t))mins=Math.max(0,Math.round((t-Date.now())/60000))}
+  const jt=job?(JOB[job.state]??job.state):'';
+  const text=run?(jt||'Σε λειτουργία'):pause?'Σε παύση':(m&&m.state==='unavailable'?'Μη διαθέσιμο':'Σταματημένο');
+  const end=comp&&run&&!isNaN(Date.parse(comp.state))?new Date(comp.state).toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}):null;
+  return {run,pause,mins,text,end};
 }
-function send(s,bytes){
-  s.q=s.q.then(async()=>{
-    if(!s.char)return;
-    const data=new Uint8Array(bytes);
-    try{s.char.writeValueWithoutResponse?await s.char.writeValueWithoutResponse(data):await s.char.writeValue(data)}
-    catch(e){toast(msg(e))}
-  });
-  return s.q;
+function isOn(c){
+  if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));return s&&s.state==='ready'&&s.on}
+  if(c.kind==='washer')return washerInfo(c).run;
+  const s=S.st.get(c.id);if(!s)return false;
+  if(c.kind==='climate')return s.state!=='off'&&s.state!=='unavailable';
+  if(c.kind==='vacuum')return ['cleaning','returning'].includes(s.state);
+  return s.state==='on';
 }
-async function setPower(s,on){s.on=on;persist(s);render();await send(s,F.power(on))}
-async function setColor(s,h){s.color=h;s.on=true;persist(s);render();await send(s,F.color(h))}
+function tone(c){
+  if(!isOn(c))return '';
+  if(c.kind==='washer')return 'cool';
+  if(c.kind==='climate'){const s=S.st.get(c.id);if(['cool','dry'].includes(s.state))return 'cool'}
+  return 'on';
+}
+function stateText(c){
+  if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return '';if(s.state==='ready')return s.on?`Αναμμένη, ${s.bri}%`:'Σβηστή';if(s.state==='connecting')return 'Σύνδεση…';return 'Πάτα για σύνδεση (μόνο στο σπίτι)'}
+  if(c.kind==='washer'){const w=washerInfo(c);return w.run&&w.mins!=null?`${w.text}, ${w.mins}′`:w.text}
+  const s=S.st.get(c.id);if(!s)return '';const a=s.attributes;
+  if(s.state==='unavailable')return 'Μη διαθέσιμο';
+  if(c.kind==='light'&&s.state==='on'&&a.brightness!=null)return `Αναμμένο, ${Math.round(a.brightness/2.55)}%`;
+  if(c.kind==='climate'){if(s.state==='off')return a.current_temperature!=null?`Σβηστό, χώρος ${a.current_temperature}°`:'Σβηστό';return `${MODES[s.state]||s.state}, στους ${a.temperature??'–'}°`}
+  if(c.kind==='vacuum'){const b=a.battery_level??devBattery(c.id);return (VAC[s.state]||s.state)+(b!=null?`, ${b}%`:'')}
+  return s.state==='on'?'Αναμμένο':'Σβηστό';
+}
+function hasSheet(c){return ['light','climate','vacuum','washer','led'].includes(c.kind)}
+function primary(c){
+  if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return;if(s.state==='ready')return ledPower(s,!s.on);return ledConnect(s)}
+  if(c.kind==='washer')return openSheet(c);
+  const s=S.st.get(c.id);if(!s||s.state==='unavailable')return;
+  if(['light','switch','fan'].includes(c.kind))return call(c.kind,'toggle',c.id);
+  if(c.kind==='climate')return call('climate',s.state==='off'?'turn_on':'turn_off',c.id);
+  if(c.kind==='vacuum')return call('vacuum',s.state==='cleaning'?'return_to_base':'start',c.id);
+}
 
-function glow(s){
-  if(s.state!=='ready'||!s.on)return 'background:var(--surface-2)';
-  const f=.35+.65*(s.bri/100);
-  return `background:${s.color};box-shadow:0 0 ${Math.round(28*f)}px ${Math.round(4*f)}px ${s.color}${hex(Math.round(160*f))};opacity:${.45+.55*f}`;
-}
-function stateText(s){
-  return {connecting:'Σύνδεση…',ready:s.on?`Αναμμένη, ${s.bri}%`:'Σβηστή',lost:'Αποσυνδεδεμένη',idle:'Αναμονή'}[s.state];
-}
 function render(){
-  const list=$('#list');
-  const active=document.activeElement;
-  if(active&&active.type==='range'&&list.contains(active))return;
-  $('#allRow').hidden=strips.size<2;
-  list.innerHTML=[...strips.values()].map(s=>{
-    const ok=s.state==='ready';
-    return `<div class="strip" data-id="${esc(s.id)}">
-      <div class="glow" style="${glow(s)}"></div>
-      <div class="head">
-        <div class="nm"><input value="${esc(s.name)}" data-k="name" aria-label="Όνομα ταινίας"><div class="st">${stateText(s)}</div></div>
-        <button class="sw" data-k="power" aria-pressed="${ok&&s.on}" aria-label="Άναμμα ή σβήσιμο" ${ok?'':'disabled'}></button>
-      </div>
-      ${ok?`<div class="body">
-        <div class="sw-row">${COLORS.map(c=>`<button class="dot" style="background:${c}" data-k="color" data-v="${c}" aria-label="Χρώμα ${c}" aria-pressed="${s.color===c}"></button>`).join('')}<label class="dot picker" aria-label="Δικό σου χρώμα"><input type="color" data-k="pick" value="${s.color}"></label></div>
-        <div class="ctl"><label><span>Φωτεινότητα</span><span data-out="bri">${s.bri}%</span></label><input type="range" min="1" max="100" value="${s.bri}" data-k="bri" aria-label="Φωτεινότητα"></div>
-        <div class="ctl"><label><span>Εφέ</span></label>
-          <div class="fx"><button data-k="fxp" aria-label="Προηγούμενο εφέ">‹</button><div class="num">${s.effect}<small>από 212</small></div><button data-k="fxn" aria-label="Επόμενο εφέ">›</button></div></div>
-        <div class="ctl"><label><span>Ταχύτητα εφέ</span><span data-out="speed">${s.speed}%</span></label><input type="range" min="0" max="100" value="${s.speed}" data-k="speed" aria-label="Ταχύτητα εφέ"></div>
-      </div>`:''}
-      <div class="foot">${ok?'<button data-k="disc">Αποσύνδεση</button>':`<button data-k="conn">${s.state==='connecting'?'Σύνδεση…':'Σύνδεση ξανά'}</button>`}<button class="danger" data-k="remove">Αφαίρεση</button></div>
-    </div>`;
-  }).join('');
+  const h=new Date().getHours();
+  $('#greet').textContent=h>=5&&h<12?'Καλημέρα':'Καλησπέρα';
+  const cs=cards();
+  const on=cs.filter(isOn).length;
+  const temps=cs.filter(c=>c.kind==='climate').map(c=>S.st.get(c.id)?.attributes.current_temperature).filter(v=>typeof v==='number');
+  const avg=temps.length?Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10:null;
+  $('#summary').innerHTML=(on?`<b>${on}</b> ${on===1?'συσκευή ανοιχτή':'συσκευές ανοιχτές'}`:'Όλα κλειστά')+(avg!=null?`, μέσα <b>${String(avg).replace('.',',')}°</b>`:'');
+  const scenes=S.live?[...S.st.values()].filter(s=>/^(scene|script)\./.test(s.entity_id)&&!hidden(S.reg.get(s.entity_id))):[];
+  $('#scenes').hidden=!scenes.length;
+  $('#scenes').innerHTML=scenes.map(s=>`<button class="scene" data-scene="${esc(s.entity_id)}">${svg('scene')}${esc(s.attributes.friendly_name||s.entity_id)}</button>`).join('');
+  const rooms=[...new Set(cs.map(c=>c.area))].sort((a,b)=>{const ia=ORDER.indexOf(a),ib=ORDER.indexOf(b);if(a==='Άλλα')return 1;if(b==='Άλλα')return -1;return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'el')});
+  if(S.room!=='all'&&!rooms.includes(S.room))S.room='all';
+  $('#rooms').innerHTML=`<button class="chip" data-room="all" aria-pressed="${S.room==='all'}">Όλα</button>`+rooms.map(r=>`<button class="chip" data-room="${esc(r)}" aria-pressed="${S.room===r}">${esc(r)}</button>`).join('');
+  const show=S.room==='all'?rooms:[S.room];
+  $('#main').innerHTML=cs.length?show.map(r=>{
+    const list=cs.filter(c=>c.area===r).sort((a,b)=>(a.kind==='washer')-(b.kind==='washer')||a.name.localeCompare(b.name,'el'));
+    const t=list.filter(c=>c.kind==='climate').map(c=>S.st.get(c.id)?.attributes.current_temperature).find(v=>typeof v==='number');
+    return `<section><div class="roomhead"><h2>${esc(r)}</h2>${t!=null?`<span>${String(t).replace('.',',')}°</span>`:''}</div><div class="grid">${list.map(tile).join('')}</div></section>`;
+  }).join(''):`<div class="empty">${S.cfg.token?'Δεν βρέθηκαν συσκευές ακόμα.':'Πάτα το γρανάζι πάνω δεξιά και βάλε το token του Home Assistant για να εμφανιστούν οι συσκευές σου.'}</div>`;
+  if(S.sheet&&$('#dlg').open&&document.activeElement?.type!=='range'&&S.sheet.kind!=='settings')renderSheet();
 }
+function tile(c){
+  const t=tone(c),s=S.st.get(c.id),na=c.kind!=='led'&&c.kind!=='washer'&&(!s||s.state==='unavailable');
+  const det=hasSheet(c);
+  if(c.kind==='washer'){
+    const w=washerInfo(c),pct=w.run&&w.mins!=null?Math.max(5,Math.min(95,100-Math.round(w.mins/1.5))):0;
+    return `<div class="tile wide ${t}" role="button" tabindex="0" data-card="${esc(c.id)}" data-act="open" aria-label="${esc(c.name)}, ${esc(stateText(c))}">
+      <div class="wrow"><span class="ic">${svg('washer')}</span><div><div class="name">${esc(c.name)}</div><div class="st">${esc(w.text)}${w.end?`, τελειώνει ${w.end}`:''}</div></div>${w.run&&w.mins!=null?`<span class="big">${w.mins}′</span>`:''}</div>
+      ${w.run?`<span class="prog"><span style="width:${pct}%"></span></span>`:''}</div>`;
+  }
+  let bar='';
+  if(c.kind==='led'){const st=S.strips.get(c.id.slice(4));if(st&&st.state==='ready'&&st.on)bar=`<span class="bar" style="background:${st.color};box-shadow:0 0 18px 4px ${st.color}88"></span>`}
+  const icon=c.kind==='switch'?'switch':c.kind;
+  return `<div class="tile ${t}${na?' off-line':''}" role="button" tabindex="0" data-card="${esc(c.id)}" data-act="${det?'open':'primary'}" aria-label="${esc(c.name)}, ${esc(stateText(c))}">
+    ${bar}<button class="ic" data-card="${esc(c.id)}" data-act="primary" aria-label="${esc(c.name)}: εναλλαγή" ${na?'disabled':''}>${svg(icon)}</button>
+    ${det?`<span class="more">${svg('dots')}</span>`:''}
+    <div><div class="name">${esc(c.name)}</div><div class="st">${esc(stateText(c))}</div></div></div>`;
+}
+
+function findCard(id){return cards().find(c=>c.id===id)}
+function openSheet(c){S.sheet={kind:'card',id:c.id};renderSheet();const g=$('#dlg');if(!g.open)g.showModal()}
+function openSettings(){S.sheet={kind:'settings'};renderSettings();const g=$('#dlg');if(!g.open)g.showModal()}
+function closeSheet(){S.sheet=null;const g=$('#dlg');if(g.open)g.close()}
+function renderSheet(){
+  if(!S.sheet)return;if(S.sheet.kind==='settings')return renderSettings();
+  const c=findCard(S.sheet.id);if(!c){closeSheet();return}
+  const sh=$('#sheet');let body='';
+  if(c.kind==='led'){
+    const st=S.strips.get(c.id.slice(4));
+    const COLORS=['#ff3b3b','#ff8a1f','#ffd21f','#2fe07a','#1fd8ff','#3b5bff','#b46bff','#ff4fae','#ffffff','#ffc98a','#6b8cff','#7cff9a','#ff6b6b'];
+    if(st.state!=='ready')body=`<p class="sub">Η ταινία δεν είναι συνδεδεμένη. Κλείσε την εφαρμογή duoCo και πάτα σύνδεση, μέσα στο σπίτι.</p><button class="power" data-svc="ledconn">Σύνδεση</button>`;
+    else body=`<div class="dots">${COLORS.map(x=>`<button class="dot" style="background:${x}" data-svc="ledcolor" data-v="${x}" aria-label="Χρώμα ${x}" aria-pressed="${st.color===x}"></button>`).join('')}<label class="dot picker" aria-label="Δικό σου χρώμα"><input type="color" data-k="ledpick" value="${st.color}"></label></div>
+      <div class="ctl"><label for="lb"><span>Φωτεινότητα</span><span data-out>${st.bri}%</span></label><input id="lb" type="range" min="1" max="100" value="${st.bri}" data-k="ledbri"></div>
+      <div class="ctl"><label><span>Εφέ</span><span>${st.effect} από 212</span></label><div class="fx"><button data-svc="fxp" aria-label="Προηγούμενο εφέ">‹</button><div class="num">${st.effect}</div><button data-svc="fxn" aria-label="Επόμενο εφέ">›</button></div></div>
+      <button class="power" data-svc="ledpower">${st.on?'Σβήσιμο':'Άναμμα'}</button>`;
+    sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">Σαλόνι, Bluetooth</p>${body}`;return;
+  }
+  if(c.kind==='washer'){
+    const w=washerInfo(c);
+    body=`<div class="bigt">${w.run&&w.mins!=null?w.mins+'′':'–'}</div><p class="sub" style="text-align:center">${esc(w.text)}${w.end?`, τελειώνει ${w.end}`:''}</p><p class="help">Για εκκίνηση από το κινητό, πάτα πρώτα Smart Control πάνω στο πλυντήριο.</p>`;
+    sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">${esc(c.area)}</p>${body}`;return;
+  }
+  const s=S.st.get(c.id);if(!s){closeSheet();return}const a=s.attributes;
+  if(c.kind==='light'){
+    const v=s.state==='on'?Math.round((a.brightness||255)/2.55):0;
+    const dim=(a.supported_color_modes||[]).some(m=>m!=='onoff');
+    body=dim?`<div class="bigt" data-out>${v}%</div><div class="ctl"><label for="lbr"><span>Φωτεινότητα</span></label><input id="lbr" type="range" min="1" max="100" value="${v||1}" data-k="bright"></div>`:'';
+    body+=`<button class="power" data-svc="toggle">${s.state==='on'?'Σβήσιμο':'Άναμμα'}</button>`;
+  }
+  if(c.kind==='climate'){
+    const modes=a.hvac_modes||['off','cool','heat'];
+    body=`<div class="row" style="align-items:center;gap:22px"><button class="round" data-svc="tdown" aria-label="Μείωση θερμοκρασίας">${svg('down')}</button><div class="bigt">${a.temperature??'–'}°</div><button class="round" data-svc="tup" aria-label="Αύξηση θερμοκρασίας">${svg('up')}</button></div>
+      <p class="sub" style="text-align:center">Θερμοκρασία χώρου ${a.current_temperature??'–'}°</p>
+      <div class="row">${modes.map(m=>`<button class="pill" data-svc="mode" data-v="${esc(m)}" aria-pressed="${s.state===m}">${esc(MODES[m]||m)}</button>`).join('')}</div>
+      <button class="power" data-svc="climpower">${s.state==='off'?'Ενεργοποίηση':'Απενεργοποίηση'}</button>`;
+  }
+  if(c.kind==='vacuum'){
+    const b=a.battery_level??devBattery(c.id);
+    body=`<div class="bigt">${b!=null?b+'%':'–'}</div><p class="sub" style="text-align:center">${esc(VAC[s.state]||s.state)}</p>
+      <div class="row"><button class="pill" data-svc="vstart">${svg('play').replace('<svg','<svg width="16" height="16"')} Καθάρισε</button><button class="pill" data-svc="vpause">Παύση</button><button class="pill" data-svc="vdock">Στη βάση</button></div>`;
+  }
+  sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">${esc(c.area)}, ${esc(stateText(c))}</p>${body}`;
+}
+function renderSettings(){
+  const c=S.cfg,bt=!!navigator.bluetooth;
+  const th=[['night','Νύχτα'],['day','Μέρα'],['fantasy','Fantasy'],['auto','Αυτόματο']];
+  $('#sheet').innerHTML=`<div class="grab"></div><h3>Ρυθμίσεις</h3>
+  <div class="sect" style="border:0;margin-top:8px;padding-top:0"><h4>Θέμα</h4><div class="row" style="justify-content:flex-start">${th.map(([k,n])=>`<button class="pill" data-theme="${k}" aria-pressed="${S.theme===k}">${n}</button>`).join('')}</div></div>
+  <div class="sect"><h4>Σύνδεση με το Home Assistant</h4>
+  <label class="field"><span>Διεύθυνση</span><input id="haUrl" inputmode="url" autocomplete="off" value="${esc(c.url)}"></label>
+  <label class="field"><span>Token πρόσβασης</span><input id="haTok" type="password" autocomplete="off" placeholder="Long-lived access token" value="${esc(c.token)}"></label>
+  <p class="err" id="err"></p><button class="power" id="saveBtn">Αποθήκευση και σύνδεση</button>
+  <p class="help">Το token το φτιάχνεις στο Home Assistant: όνομά σου κάτω αριστερά → Security → Long-lived access tokens → Create token. Το Tailscale πρέπει να είναι ανοιχτό στο κινητό.</p></div>
+  <div class="sect"><h4>Ταινίες LED (Bluetooth)</h4>
+  ${bt?`<div class="list">${[...S.strips.values()].map(s=>`<div class="it">${svg('led').replace('<svg','<svg width="20" height="20"')}<span>${esc(s.name)}</span><button data-rmstrip="${esc(s.id)}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχουν προστεθεί ταινίες.</p>'}</div>
+  <button class="secondary" id="addStrip">Προσθήκη ταινίας</button><button class="secondary" id="addStripAll">Δεν εμφανίζεται; Όλες οι συσκευές Bluetooth</button>
+  <p class="help">Κλείσε πρώτα την εφαρμογή duoCo. Οι ταινίες δουλεύουν μόνο μέσα στο σπίτι.</p>`:'<p class="help">Αυτός ο browser δεν υποστηρίζει Bluetooth. Χρησιμοποίησε τον Chrome σε Android.</p>'}</div>`;
+}
+
+const SVC='0000fff0-0000-1000-8000-00805f9b34fb',CHR='0000fff3-0000-1000-8000-00805f9b34fb';
+const F={power:on=>on?[0x7e,4,4,1,0,1,0xff,0,0xef]:[0x7e,4,4,0,0,0,0xff,0,0xef],color:h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));return[0x7e,7,5,3,r,g,b,0x10,0xef]},bright:v=>[0x7e,4,1,v,0xff,0xff,0xff,0,0xef],effect:id=>[0x7e,5,3,id,6,0xff,0xff,0,0xef]};
+let ledSaved=store.get('led.strips',{});
+function ledPersist(s){ledSaved[s.id]={name:s.name,on:s.on,color:s.color,bri:s.bri,effect:s.effect,speed:s.speed??50};store.set('led.strips',ledSaved)}
+function ledMsg(e){if(e&&e.name==='NetworkError')return 'Δεν έγινε σύνδεση. Κλείσε την εφαρμογή duoCo και ξαναδοκίμασε.';if(e&&e.name==='NotFoundError')return 'Η ταινία δεν βρέθηκε. Είσαι κοντά της;';return 'Bluetooth: '+(e&&e.message||e)}
+async function ledAdd(all){
+  try{
+    const dev=await navigator.bluetooth.requestDevice(all?{acceptAllDevices:true,optionalServices:[SVC]}:{filters:[{namePrefix:'MELK'},{namePrefix:'ELK'},{namePrefix:'OA21'},{services:[SVC]}],optionalServices:[SVC]});
+    const s=ledAttach(dev);ledPersist(s);renderSettings();render();await ledConnect(s);
+  }catch(e){if(e.name!=='NotFoundError')toast(ledMsg(e))}
+}
+function ledAttach(dev){
+  let s=S.strips.get(dev.id);if(s)return s;
+  const p=ledSaved[dev.id]||{};
+  s={id:dev.id,dev,char:null,name:p.name||('Ταινία '+(S.strips.size+1)),on:p.on??true,color:p.color||'#b46bff',bri:p.bri??100,effect:p.effect??0,state:'lost',q:Promise.resolve()};
+  S.strips.set(dev.id,s);dev.addEventListener('gattserverdisconnected',()=>{s.char=null;s.state='lost';render()});
+  return s;
+}
+async function ledConnect(s){
+  s.state='connecting';render();
+  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();toast('Συνδέθηκε: '+s.name)}
+  catch(e){s.char=null;s.state='lost';render();toast(ledMsg(e))}
+}
+function ledSend(s,bytes){s.q=s.q.then(async()=>{if(!s.char)return;const d=new Uint8Array(bytes);try{s.char.writeValueWithoutResponse?await s.char.writeValueWithoutResponse(d):await s.char.writeValue(d)}catch(e){toast(ledMsg(e))}});return s.q}
+function ledPower(s,on){s.on=on;ledPersist(s);render();return ledSend(s,F.power(on))}
+function ledColor(s,h){s.color=h;s.on=true;ledPersist(s);render();return ledSend(s,F.color(h))}
 
 document.addEventListener('click',async e=>{
-  const all=e.target.closest('[data-all]');
-  if(all){const on=all.dataset.all==='on';for(const s of strips.values())if(s.char)setPower(s,on);return}
-  const b=e.target.closest('[data-k]');if(!b||b.tagName==='INPUT')return;
-  const s=strips.get(b.closest('.strip').dataset.id);if(!s)return;
-  const k=b.dataset.k;
-  if(k==='power')setPower(s,!s.on);
-  if(k==='color')setColor(s,b.dataset.v);
-  if(k==='fxn'||k==='fxp'){s.effect=(s.effect+(k==='fxn'?1:212))%213;s.on=true;persist(s);render();send(s,F.effect(s.effect))}
-  if(k==='conn')connect(s);
-  if(k==='disc'){s.dev.gatt.disconnect()}
-  if(k==='remove'){if(s.dev.gatt.connected)s.dev.gatt.disconnect();strips.delete(s.id);delete saved[s.id];store.set('led.strips',saved);if(s.dev.forget)try{await s.dev.forget()}catch(x){}render()}
-});
-document.addEventListener('input',e=>{
-  const k=e.target.dataset.k;if(!k)return;
-  const card=e.target.closest('.strip');if(!card)return;
-  const s=strips.get(card.dataset.id);
-  if(k==='bri'||k==='speed'){s[k]=+e.target.value;const o=card.querySelector(`[data-out="${k}"]`);if(o)o.textContent=s[k]+'%';if(k==='bri')card.querySelector('.glow').style.cssText=glow(s)}
-  if(k==='name'){s.name=e.target.value.trim()||'Ταινία';persist(s)}
-});
-document.addEventListener('change',e=>{
-  const k=e.target.dataset.k;if(!k)return;
-  const card=e.target.closest('.strip');if(!card)return;
-  const s=strips.get(card.dataset.id);
-  if(k==='bri'){persist(s);send(s,F.bright(s.bri));e.target.blur();render()}
-  if(k==='speed'){persist(s);send(s,F.speed(s.speed));e.target.blur()}
-  if(k==='pick')setColor(s,e.target.value);
-  if(k==='name')render();
-});
-$('#addBtn').addEventListener('click',()=>add(false));
-$('#addAllBtn').addEventListener('click',()=>add(true));
-
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-(async()=>{
-  if(!check())return;
-  if(navigator.bluetooth.getDevices){
-    try{
-      const devs=await navigator.bluetooth.getDevices();
-      for(const d of devs)if(saved[d.id])attach(d);
-    }catch(e){}
+  const sc=e.target.closest('[data-scene]');if(sc){const id=sc.dataset.scene;call(id.split('.')[0],'turn_on',id);toast('Ενεργοποιήθηκε: '+sc.textContent.trim());return}
+  const rm=e.target.closest('[data-room]');if(rm){S.room=rm.dataset.room;render();return}
+  const th=e.target.closest('[data-theme]');if(th&&th.tagName==='BUTTON'){S.theme=th.dataset.theme;store.set('home.theme',S.theme);applyTheme();renderSettings();return}
+  if(e.target.closest('#settingsBtn')||e.target.closest('#statusBtn')){openSettings();return}
+  if(e.target.id==='addStrip')return ledAdd(false);
+  if(e.target.id==='addStripAll')return ledAdd(true);
+  const rs=e.target.closest('[data-rmstrip]');if(rs){const s=S.strips.get(rs.dataset.rmstrip);if(s){if(s.dev.gatt.connected)s.dev.gatt.disconnect();S.strips.delete(s.id);delete ledSaved[s.id];store.set('led.strips',ledSaved);if(s.dev.forget)try{await s.dev.forget()}catch(x){}}renderSettings();render();return}
+  if(e.target.id==='saveBtn'){
+    const url=$('#haUrl').value.trim().replace(/\/+$/,''),token=$('#haTok').value.trim();
+    if(!/^https?:\/\//i.test(url)){$('#err').textContent='Η διεύθυνση πρέπει να ξεκινά με https://';return}
+    if(!token){$('#err').textContent='Συμπλήρωσε το token.';return}
+    S.cfg={url,token};store.set('home.cfg',S.cfg);closeSheet();connect();return;
   }
-  render();
-})();
+  if(e.target===$('#dlg')){closeSheet();return}
+  const act=e.target.closest('[data-act]');
+  if(act&&!act.closest('dialog')){const c=findCard(act.dataset.card);if(!c)return;if(act.dataset.act==='open')openSheet(c);else primary(c);return}
+  const sv=e.target.closest('[data-svc]');
+  if(sv&&S.sheet&&S.sheet.kind==='card'){
+    const c=findCard(S.sheet.id);if(!c)return;const k=sv.dataset.svc;
+    if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));
+      if(k==='ledconn')ledConnect(s);if(k==='ledpower')ledPower(s,!s.on);if(k==='ledcolor')ledColor(s,sv.dataset.v);
+      if(k==='fxn'||k==='fxp'){s.effect=(s.effect+(k==='fxn'?1:212))%213;s.on=true;ledPersist(s);ledSend(s,F.effect(s.effect))}
+      renderSheet();return}
+    const s=S.st.get(c.id);if(!s)return;const a=s.attributes,step=a.target_temp_step||1;
+    ({toggle:()=>call(c.kind,'toggle',c.id),
+      tup:()=>call('climate','set_temperature',c.id,{temperature:Math.min(a.max_temp??30,(a.temperature??22)+step)}),
+      tdown:()=>call('climate','set_temperature',c.id,{temperature:Math.max(a.min_temp??16,(a.temperature??22)-step)}),
+      mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
+      climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
+      vstart:()=>call('vacuum','start',c.id),vpause:()=>call('vacuum','pause',c.id),vdock:()=>call('vacuum','return_to_base',c.id)})[k]?.();
+  }
+});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('tile')){e.preventDefault();e.target.click()}});
+document.addEventListener('input',e=>{if(e.target.type!=='range')return;const o=e.target.closest('.sheet')?.querySelector('[data-out]');if(o)o.textContent=e.target.value+'%'});
+document.addEventListener('change',e=>{
+  const k=e.target.dataset.k;if(!k||!S.sheet)return;const c=findCard(S.sheet.id);if(!c)return;const v=+e.target.value;
+  if(k==='bright')call('light','turn_on',c.id,{brightness_pct:v});
+  if(k==='ledbri'){const s=S.strips.get(c.id.slice(4));s.bri=v;ledPersist(s);ledSend(s,F.bright(v));render()}
+  if(k==='ledpick'){ledColor(S.strips.get(c.id.slice(4)),e.target.value);renderSheet()}
+  e.target.blur();
+});
+$('#dlg').addEventListener('close',()=>{S.sheet=null});
+$('#settingsBtn').innerHTML=svg('gear');
+
+applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();
+if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
+(async()=>{if(navigator.bluetooth&&navigator.bluetooth.getDevices){try{for(const d of await navigator.bluetooth.getDevices())if(ledSaved[d.id]){const s=ledAttach(d);render();ledConnect(s)}}catch(e){}}})();
 </script>
 </body>
 </html>

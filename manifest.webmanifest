@@ -1,7 +1,7 @@
 {
-  "name": "Ταινίες LED",
-  "short_name": "Ταινίες LED",
-  "description": "Έλεγχος ταινιών LED duoCo μέσω Bluetooth",
+  "name": "Σπίτι",
+  "short_name": "Σπίτι",
+  "description": "Έλεγχος του σπιτιού",
   "id": "/",
   "start_url": "./",
   "scope": "./",
