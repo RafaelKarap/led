@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8ecef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151b22" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ταινίες LED">
+<title>Ταινίες LED</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecef;--surface:#f7f9fa;--surface-2:#dce2e7;--ink:#17202b;--muted:#5a6675;--line:#cdd5dc;--accent:#3b78d6;--danger:#b8432c;color-scheme:light;font-family:Commissioner,"Segoe UI",Roboto,system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151b22;--surface:#1f2730;--surface-2:#2b343f;--ink:#eef2f5;--muted:#95a2b0;--line:#333d49;--accent:#71a5f2;--danger:#e57a64;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151b22;--surface:#1f2730;--surface-2:#2b343f;--ink:#eef2f5;--muted:#95a2b0;--line:#333d49;--accent:#71a5f2;--danger:#e57a64;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:2rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:4px 0 6px}
+.lead{color:var(--muted);margin:0 0 18px}
+.primary{width:100%;border:0;border-radius:16px;padding:15px;font-weight:600;background:var(--ink);color:var(--bg)}
+.link{background:none;border:0;color:var(--accent);padding:10px 0;font-size:.92rem}
+.notice{background:var(--surface);border-radius:18px;padding:16px;color:var(--muted);font-size:.95rem}
+.notice b{color:var(--ink)}
+.all{display:flex;gap:8px;margin:18px 0 4px}
+.all button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px;font-weight:500}
+.strip{background:var(--surface);border-radius:22px;padding:16px;margin-top:14px}
+.glow{height:12px;border-radius:6px;background:var(--surface-2);margin-bottom:16px;transition:background .3s,box-shadow .3s}
+.head{display:flex;align-items:center;gap:10px}
+.head .nm{flex:1;min-width:0}
+.head .nm input{width:100%;border:0;background:transparent;font-weight:600;font-size:1.1rem;padding:0}
+.head .st{color:var(--muted);font-size:.85rem}
+.sw{width:56px;height:34px;border-radius:17px;border:0;background:var(--surface-2);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--surface);transition:transform .2s}
+.sw[aria-pressed="true"]{background:var(--accent)}
+.sw[aria-pressed="true"]::after{transform:translateX(22px)}
+.sw:disabled{opacity:.4}
+.body{margin-top:14px}
+.body[hidden]{display:none}
+.sw-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:4px 0 14px}
+.dot{aspect-ratio:1;border-radius:50%;border:2px solid transparent}
+.dot[aria-pressed="true"]{border-color:var(--ink)}
+.picker{position:relative;overflow:hidden;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+.picker input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;padding:0}
+.ctl{margin:6px 0 12px}
+.ctl label{display:flex;justify-content:space-between;color:var(--muted);font-size:.88rem;margin-bottom:2px}
+input[type=range]{width:100%;height:40px;-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--surface-2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-7px;border-radius:50%;background:var(--ink);border:3px solid var(--surface)}
+input[type=range]::-moz-range-track{height:12px;border-radius:6px;background:var(--surface-2)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ink);border:3px solid var(--surface)}
+.fx{display:flex;align-items:center;gap:8px}
+.fx button{width:44px;height:44px;border-radius:12px;border:0;background:var(--surface-2);font-size:1.2rem}
+.fx .num{flex:1;text-align:center;font-weight:600}
+.fx .num small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
+.foot{display:flex;justify-content:space-between;margin-top:6px}
+.foot button{background:none;border:0;color:var(--muted);font-size:.88rem;padding:8px 0}
+.foot .danger{color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:14px;font-size:.92rem;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ταινίες LED</h1>
+  <p class="lead" id="lead">Έλεγχος μέσω Bluetooth, χωρίς την εφαρμογή duoCo.</p>
+  <div id="unsupported" class="notice" hidden></div>
+  <div id="app">
+    <button class="primary" id="addBtn">Προσθήκη ταινίας</button>
+    <button class="link" id="addAllBtn">Δεν εμφανίζεται; Δείξε όλες τις συσκευές Bluetooth</button>
+    <div class="all" id="allRow" hidden>
+      <button data-all="on">Άναψε όλες</button>
+      <button data-all="off">Σβήσε όλες</button>
+    </div>
+    <div id="list"></div>
+    <p class="notice" id="tip" style="margin-top:18px">Κλείσε πρώτα την εφαρμογή duoCo (και από τις πρόσφατες εφαρμογές), γιατί κάθε ταινία δέχεται <b>μία σύνδεση τη φορά</b>.</p>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+const SVC='0000fff0-0000-1000-8000-00805f9b34fb',CHR='0000fff3-0000-1000-8000-00805f9b34fb';
+const COLORS=['#ff0000','#ff7a00','#ffd400','#00ff00','#00e5ff','#0033ff','#b000ff','#ff00a0','#ffffff','#ffb36b','#ff4d4d','#7cff9a','#6b8cff'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const strips=new Map();
+let saved=store.get('led.strips',{});
+
+const hex=v=>v.toString(16).padStart(2,'0');
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const F={
+  power:on=>on?[0x7e,4,4,1,0,1,0xff,0,0xef]:[0x7e,4,4,0,0,0,0xff,0,0xef],
+  color:h=>{const[r,g,b]=rgb(h);return[0x7e,7,5,3,r,g,b,0x10,0xef]},
+  bright:v=>[0x7e,4,1,v,0xff,0xff,0xff,0,0xef],
+  speed:v=>[0x7e,4,2,v,0xff,0xff,0xff,0,0xef],
+  effect:id=>[0x7e,5,3,id,6,0xff,0xff,0,0xef]
+};
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
+function persist(s){saved[s.id]={name:s.name,on:s.on,color:s.color,bri:s.bri,effect:s.effect,speed:s.speed};store.set('led.strips',saved)}
+
+function check(){
+  const u=$('#unsupported');
+  if(!window.isSecureContext){u.hidden=false;u.innerHTML='Η σελίδα πρέπει να ανοίξει από διεύθυνση <b>https://</b> για να επιτρέψει ο Chrome το Bluetooth.';$('#app').hidden=true;return false}
+  if(!navigator.bluetooth){u.hidden=false;u.innerHTML='Αυτός ο browser δεν υποστηρίζει Bluetooth. Άνοιξε τη σελίδα στον <b>Chrome</b> σε Android και έλεγξε ότι είναι ενημερωμένος.';$('#app').hidden=true;return false}
+  return true;
+}
+
+async function add(all){
+  try{
+    const opts=all?{acceptAllDevices:true,optionalServices:[SVC]}:{filters:[{namePrefix:'MELK'},{namePrefix:'ELK'},{namePrefix:'OA21'},{services:[SVC]}],optionalServices:[SVC]};
+    const dev=await navigator.bluetooth.requestDevice(opts);
+    await attach(dev);
+  }catch(e){if(e.name!=='NotFoundError')toast(msg(e))}
+}
+function msg(e){
+  if(e&&e.name==='NetworkError')return 'Δεν έγινε σύνδεση. Κλείσε την εφαρμογή duoCo και ξαναδοκίμασε.';
+  if(e&&e.name==='NotFoundError')return 'Η συσκευή δεν βρέθηκε. Είναι αναμμένη και κοντά;';
+  if(e&&e.name==='SecurityError')return 'Ο Chrome δεν επέτρεψε Bluetooth σε αυτή τη σελίδα.';
+  return 'Κάτι πήγε στραβά: '+(e&&e.message||e);
+}
+async function attach(dev){
+  const prev=saved[dev.id]||{};
+  let s=strips.get(dev.id);
+  if(!s){
+    s={id:dev.id,dev,char:null,name:prev.name||dev.name||'Ταινία',on:prev.on??true,color:prev.color||'#0033ff',bri:prev.bri??100,effect:prev.effect??0,speed:prev.speed??50,state:'idle',q:Promise.resolve(),open:false};
+    strips.set(dev.id,s);
+    dev.addEventListener('gattserverdisconnected',()=>{s.char=null;s.state='lost';render()});
+  }
+  persist(s);render();
+  await connect(s);
+}
+async function connect(s){
+  s.state='connecting';render();
+  try{
+    const srv=await s.dev.gatt.connect();
+    const svc=await srv.getPrimaryService(SVC);
+    s.char=await svc.getCharacteristic(CHR);
+    s.state='ready';render();toast(`Συνδέθηκε: ${s.name}`);
+  }catch(e){s.char=null;s.state='lost';render();toast(msg(e))}
+}
+function send(s,bytes){
+  s.q=s.q.then(async()=>{
+    if(!s.char)return;
+    const data=new Uint8Array(bytes);
+    try{s.char.writeValueWithoutResponse?await s.char.writeValueWithoutResponse(data):await s.char.writeValue(data)}
+    catch(e){toast(msg(e))}
+  });
+  return s.q;
+}
+async function setPower(s,on){s.on=on;persist(s);render();await send(s,F.power(on))}
+async function setColor(s,h){s.color=h;s.on=true;persist(s);render();await send(s,F.color(h))}
+
+function glow(s){
+  if(s.state!=='ready'||!s.on)return 'background:var(--surface-2)';
+  const f=.35+.65*(s.bri/100);
+  return `background:${s.color};box-shadow:0 0 ${Math.round(28*f)}px ${Math.round(4*f)}px ${s.color}${hex(Math.round(160*f))};opacity:${.45+.55*f}`;
+}
+function stateText(s){
+  return {connecting:'Σύνδεση…',ready:s.on?`Αναμμένη, ${s.bri}%`:'Σβηστή',lost:'Αποσυνδεδεμένη',idle:'Αναμονή'}[s.state];
+}
+function render(){
+  const list=$('#list');
+  const active=document.activeElement;
+  if(active&&active.type==='range'&&list.contains(active))return;
+  $('#allRow').hidden=strips.size<2;
+  list.innerHTML=[...strips.values()].map(s=>{
+    const ok=s.state==='ready';
+    return `<div class="strip" data-id="${esc(s.id)}">
+      <div class="glow" style="${glow(s)}"></div>
+      <div class="head">
+        <div class="nm"><input value="${esc(s.name)}" data-k="name" aria-label="Όνομα ταινίας"><div class="st">${stateText(s)}</div></div>
+        <button class="sw" data-k="power" aria-pressed="${ok&&s.on}" aria-label="Άναμμα ή σβήσιμο" ${ok?'':'disabled'}></button>
+      </div>
+      ${ok?`<div class="body">
+        <div class="sw-row">${COLORS.map(c=>`<button class="dot" style="background:${c}" data-k="color" data-v="${c}" aria-label="Χρώμα ${c}" aria-pressed="${s.color===c}"></button>`).join('')}<label class="dot picker" aria-label="Δικό σου χρώμα"><input type="color" data-k="pick" value="${s.color}"></label></div>
+        <div class="ctl"><label><span>Φωτεινότητα</span><span data-out="bri">${s.bri}%</span></label><input type="range" min="1" max="100" value="${s.bri}" data-k="bri" aria-label="Φωτεινότητα"></div>
+        <div class="ctl"><label><span>Εφέ</span></label>
+          <div class="fx"><button data-k="fxp" aria-label="Προηγούμενο εφέ">‹</button><div class="num">${s.effect}<small>από 212</small></div><button data-k="fxn" aria-label="Επόμενο εφέ">›</button></div></div>
+        <div class="ctl"><label><span>Ταχύτητα εφέ</span><span data-out="speed">${s.speed}%</span></label><input type="range" min="0" max="100" value="${s.speed}" data-k="speed" aria-label="Ταχύτητα εφέ"></div>
+      </div>`:''}
+      <div class="foot">${ok?'<button data-k="disc">Αποσύνδεση</button>':`<button data-k="conn">${s.state==='connecting'?'Σύνδεση…':'Σύνδεση ξανά'}</button>`}<button class="danger" data-k="remove">Αφαίρεση</button></div>
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('click',async e=>{
+  const all=e.target.closest('[data-all]');
+  if(all){const on=all.dataset.all==='on';for(const s of strips.values())if(s.char)setPower(s,on);return}
+  const b=e.target.closest('[data-k]');if(!b||b.tagName==='INPUT')return;
+  const s=strips.get(b.closest('.strip').dataset.id);if(!s)return;
+  const k=b.dataset.k;
+  if(k==='power')setPower(s,!s.on);
+  if(k==='color')setColor(s,b.dataset.v);
+  if(k==='fxn'||k==='fxp'){s.effect=(s.effect+(k==='fxn'?1:212))%213;s.on=true;persist(s);render();send(s,F.effect(s.effect))}
+  if(k==='conn')connect(s);
+  if(k==='disc'){s.dev.gatt.disconnect()}
+  if(k==='remove'){if(s.dev.gatt.connected)s.dev.gatt.disconnect();strips.delete(s.id);delete saved[s.id];store.set('led.strips',saved);if(s.dev.forget)try{await s.dev.forget()}catch(x){}render()}
+});
+document.addEventListener('input',e=>{
+  const k=e.target.dataset.k;if(!k)return;
+  const card=e.target.closest('.strip');if(!card)return;
+  const s=strips.get(card.dataset.id);
+  if(k==='bri'||k==='speed'){s[k]=+e.target.value;const o=card.querySelector(`[data-out="${k}"]`);if(o)o.textContent=s[k]+'%';if(k==='bri')card.querySelector('.glow').style.cssText=glow(s)}
+  if(k==='name'){s.name=e.target.value.trim()||'Ταινία';persist(s)}
+});
+document.addEventListener('change',e=>{
+  const k=e.target.dataset.k;if(!k)return;
+  const card=e.target.closest('.strip');if(!card)return;
+  const s=strips.get(card.dataset.id);
+  if(k==='bri'){persist(s);send(s,F.bright(s.bri));e.target.blur();render()}
+  if(k==='speed'){persist(s);send(s,F.speed(s.speed));e.target.blur()}
+  if(k==='pick')setColor(s,e.target.value);
+  if(k==='name')render();
+});
+$('#addBtn').addEventListener('click',()=>add(false));
+$('#addAllBtn').addEventListener('click',()=>add(true));
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+(async()=>{
+  if(!check())return;
+  if(navigator.bluetooth.getDevices){
+    try{
+      const devs=await navigator.bluetooth.getDevices();
+      for(const d of devs)if(saved[d.id])attach(d);
+    }catch(e){}
+  }
+  render();
+})();
+</script>
+</body>
+</html>
