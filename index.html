@@ -468,7 +468,8 @@ function renderSettings(){
   ${bt?`<div class="list">${[...S.strips.values()].map(s=>`<div class="it">${svg('led').replace('<svg','<svg width="20" height="20"')}<span>${esc(s.name)}</span><button data-rmstrip="${esc(s.id)}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχουν προστεθεί ταινίες.</p>'}</div>
   ${S.strips.size>1?`<label class="chk"><input type="checkbox" id="ledGroupChk" ${S.ledGroup?'checked':''}><span>Χειρισμός όλων μαζί, σε μία κάρτα</span></label>`:''}
   <button class="secondary" id="addStrip">Προσθήκη ταινίας</button><button class="secondary" id="addStripAll">Δεν εμφανίζεται; Όλες οι συσκευές Bluetooth</button>
-  <p class="help">Κλείσε πρώτα την εφαρμογή duoCo. Οι ταινίες δουλεύουν μόνο μέσα στο σπίτι.</p>`:'<p class="help">Αυτός ο browser δεν υποστηρίζει Bluetooth. Χρησιμοποίησε τον Chrome σε Android.</p>'}</div>`;
+  <p class="help">Κλείσε πρώτα την εφαρμογή duoCo. Οι ταινίες δουλεύουν μόνο μέσα στο σπίτι.</p>
+  ${S.autoBt&&S.autoBt!=='ok'?`<p class="help"><b>Αυτόματη σύνδεση:</b> για να συνδέονται μόνες τους, άνοιξε στον Chrome το <b>chrome://flags</b>, ενεργοποίησε (Enabled) τα «Use the new permissions backend for Web Bluetooth» και «Experimental Web Platform features», πάτα Relaunch και πρόσθεσε τις ταινίες ξανά μία τελευταία φορά.</p>`:''}`:'<p class="help">Αυτός ο browser δεν υποστηρίζει Bluetooth. Χρησιμοποίησε τον Chrome σε Android.</p>'}</div>`;
 }
 
 const SVC='0000fff0-0000-1000-8000-00805f9b34fb',CHR='0000fff3-0000-1000-8000-00805f9b34fb';
@@ -488,13 +489,32 @@ function ledAttach(dev){
   let s=S.strips.get(dev.id);if(s)return s;
   const p=ledSaved[dev.id]||{};
   s={id:dev.id,dev,char:null,name:p.name||('Ταινία '+(S.strips.size+1)),on:p.on??true,color:p.color||'#b46bff',bri:p.bri??100,effect:p.effect??0,state:'lost',q:Promise.resolve()};
-  S.strips.set(dev.id,s);dev.addEventListener('gattserverdisconnected',()=>{s.char=null;s.state='lost';render()});
+  S.strips.set(dev.id,s);dev.addEventListener('gattserverdisconnected',()=>{s.char=null;s.state='lost';render();setTimeout(()=>{if(document.visibilityState==='visible')ledWatch(s)},3000)});
   return s;
 }
-async function ledConnect(s){
-  s.state='connecting';render();
-  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();toast('Συνδέθηκε: '+s.name)}
-  catch(e){s.char=null;s.state='lost';render();toast(ledMsg(e))}
+async function ledConnect(s,quiet){
+  if(s.state==='ready'||s.busy)return;s.busy=true;s.state='connecting';render();
+  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();if(!quiet)toast('Συνδέθηκε: '+s.name)}
+  catch(e){s.char=null;s.state='lost';render();if(!quiet)toast(ledMsg(e))}
+  finally{s.busy=false}
+}
+function ledWatch(s){
+  if(s.state==='ready'||s.busy||s.watching)return;
+  if(!s.dev.watchAdvertisements){ledConnect(s,true);return}
+  const ac=new AbortController();s.watching=true;
+  const done=()=>{s.watching=false;try{ac.abort()}catch(e){}};
+  s.dev.addEventListener('advertisementreceived',async()=>{done();await ledConnect(s,true)},{once:true});
+  s.dev.watchAdvertisements({signal:ac.signal}).catch(()=>{done();ledConnect(s,true)});
+  setTimeout(()=>{if(s.watching){done();ledConnect(s,true)}},12000);
+}
+async function ledAuto(){
+  if(!navigator.bluetooth)return;
+  if(!navigator.bluetooth.getDevices){S.autoBt='unsupported';return}
+  let devs=[];try{devs=await navigator.bluetooth.getDevices()}catch(e){S.autoBt='unsupported';return}
+  const known=devs.filter(d=>ledSaved[d.id]);
+  S.autoBt=Object.keys(ledSaved).length&&!known.length?'forgotten':'ok';
+  for(const d of known){const s=ledAttach(d);ledWatch(s)}
+  render();
 }
 function ledSend(s,bytes){s.q=s.q.then(async()=>{if(!s.char)return;const d=new Uint8Array(bytes);try{s.char.writeValueWithoutResponse?await s.char.writeValueWithoutResponse(d):await s.char.writeValue(d)}catch(e){toast(ledMsg(e))}});return s.q}
 function ledPower(s,on){s.on=on;ledPersist(s);render();return ledSend(s,F.power(on))}
@@ -559,7 +579,9 @@ applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 render();
 if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
-(async()=>{if(navigator.bluetooth&&navigator.bluetooth.getDevices){try{for(const d of await navigator.bluetooth.getDevices())if(ledSaved[d.id]){const s=ledAttach(d);render();ledConnect(s)}}catch(e){}}})();
+ledAuto();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ledAuto();if(S.cfg.token&&!S.live)connect()}});
+setInterval(()=>{if(document.visibilityState==='visible'&&[...S.strips.values()].some(s=>s.state!=='ready'))ledAuto()},20000);
 </script>
 </body>
 </html>
