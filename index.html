@@ -210,7 +210,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=24;
+const APP_VERSION=25;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -458,7 +458,8 @@ async function runMode(id){
     if(S.live&&ent){
       const t={entity_id:ent},seq=[];
       if(S.spSource)seq.push({action:'media_player.select_source',target:t,data:{source:S.spSource},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
-      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true},{delay:{seconds:3}},{action:'media_player.media_seek',target:t,data:{seek_position:S.elenaSeek},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
+      const sk=S.elenaSeek,upd={action:'homeassistant.update_entity',target:t,continue_on_error:true},seek={action:'media_player.media_seek',target:t,data:{seek_position:sk},continue_on_error:true},behind={condition:'template',value_template:`{{ (state_attr('${ent}','media_position')|int(0)) < ${Math.max(0,sk-2)} }}`};
+      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true},{delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
       S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
     }
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
