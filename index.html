@@ -212,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=28;
+const APP_VERSION=29;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -474,6 +474,10 @@ async function runMode(id){
     if(S.live&&S.elenaTv&&tv&&vid){const t={entity_id:tv.id};S.send({type:'execute_script',sequence:[
       {action:'media_player.turn_on',target:t,continue_on_error:true},
       {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
+      {delay:{seconds:4}},
+      {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true},
+      {delay:{seconds:7}},
+      {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true},
       {delay:{seconds:4}},
       {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')))}
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
