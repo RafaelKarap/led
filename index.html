@@ -172,7 +172,7 @@ scene:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
 gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
 dots:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
 up:'<path d="M12 5v14M5 12h14"/>',down:'<path d="M5 12h14"/>',
-play:'<path d="M7 4v16l13-8z"/>',door:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',work:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',heart:'<path d="M12 21s-7-4.5-9.3-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.3 6c-2.3 4.5-9.3 9-9.3 9z"/>',mode:'<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
+play:'<path d="M7 4v16l13-8z"/>',door:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',next:'<path d="m5 4 10 8-10 8zM19 5v14"/>',prev:'<path d="M19 20 9 12l10-8zM5 19V5"/>',work:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',heart:'<path d="M12 21s-7-4.5-9.3-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.3 6c-2.3 4.5-9.3 9-9.3 9z"/>',mode:'<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
 };
 const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||I.switch}</svg>`;
 const $=s=>document.querySelector(s);
@@ -180,8 +180,8 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
-const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό'];
-const DOMS=['light','switch','climate','vacuum','fan'];
+const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
+const DOMS=['light','switch','climate','vacuum','fan','media_player'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
 const VAC={cleaning:'Καθαρίζει',docked:'Στη βάση',returning:'Επιστρέφει',idle:'Αδρανής',paused:'Σε παύση',error:'Σφάλμα',unavailable:'Μη διαθέσιμη'};
 const JOB={wash:'Πλύση',washing:'Πλύση',rinse:'Ξέβγαλμα',rinsing:'Ξέβγαλμα',spin:'Στύψιμο',spinning:'Στύψιμο',drying:'Στέγνωμα',finish:'Τελείωσε',finished:'Τελείωσε',weight_sensing:'Ζύγισμα',pre_wash:'Πρόπλυση',delay_wash:'Καθυστέρηση',none:''};
@@ -189,9 +189,9 @@ const BUILTIN=[
 {id:'exit',name:'Έξοδος',icon:'door',desc:'Κλείνει όλα τα φώτα, τις ταινίες και τα κλιματιστικά.'},
 {id:'night',name:'Καληνύχτα',icon:'moon',desc:'Σβήνει φώτα και ταινίες. Κλείνει τα κλιματιστικά εκτός από του υπνοδωματίου.'},
 {id:'movie',name:'Ταινία',icon:'screen',desc:'Σβήνει τα φώτα και ανάβει τις ταινίες μωβ, χαμηλά.'},
-{id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως και κάνει τις ταινίες κόκκινες.'},
+{id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως, κάνει τις ταινίες κόκκινες και παίζει το τραγούδι από το 0:48.'},
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'}];
-const S={ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const S={songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
 function applyTheme(){
@@ -258,7 +258,8 @@ function cards(){
       const dom=id.split('.')[0];if(!DOMS.includes(dom))continue;
       const r=S.reg.get(id);if(hidden(r))continue;
       if(r&&r.device_id&&washers.has(r.device_id))continue;
-      out.push({kind:dom,id,area:areaName(areaOf(id)),name:cleanName(s.attributes.friendly_name||id)});
+      const isSp=id.startsWith('media_player.spotify');
+      out.push({kind:dom,id,area:isSp?'Μουσική':areaName(areaOf(id)),name:isSp?'Spotify':cleanName(s.attributes.friendly_name||id)});
     }
   }
   if(S.ledGroup&&S.strips.size>1)out.push({kind:'ledgrp',id:'ledgrp',area:'Σαλόνι',name:'Ταινίες LED'});
@@ -285,6 +286,7 @@ function isOn(c){
   const s=S.st.get(c.id);if(!s)return false;
   if(c.kind==='climate')return s.state!=='off'&&s.state!=='unavailable';
   if(c.kind==='vacuum')return ['cleaning','returning'].includes(s.state);
+  if(c.kind==='media_player')return s.state==='playing';
   return s.state==='on';
 }
 function tone(c){
@@ -302,9 +304,10 @@ function stateText(c){
   if(c.kind==='light'&&s.state==='on'&&a.brightness!=null)return `Αναμμένο, ${Math.round(a.brightness/2.55)}%`;
   if(c.kind==='climate'){if(s.state==='off')return a.current_temperature!=null?`Σβηστό, χώρος ${a.current_temperature}°`:'Σβηστό';return `${MODES[s.state]||s.state}, στους ${a.temperature??'–'}°`}
   if(c.kind==='vacuum'){const b=a.battery_level??devBattery(c.id);return (VAC[s.state]||s.state)+(b!=null?`, ${b}%`:'')}
+  if(c.kind==='media_player'){if(['playing','paused'].includes(s.state)&&a.media_title)return (s.state==='paused'?'Παύση: ':'')+a.media_title+(a.media_artist?' · '+a.media_artist:'');return {idle:'Αδρανές',off:'Ανενεργό',playing:'Παίζει',paused:'Σε παύση'}[s.state]||s.state}
   return s.state==='on'?'Αναμμένο':'Σβηστό';
 }
-function hasSheet(c){return ['light','climate','vacuum','washer','led','ledgrp'].includes(c.kind)}
+function hasSheet(c){return ['light','climate','vacuum','washer','led','ledgrp','media_player'].includes(c.kind)}
 async function ledConnectAll(L){for(const s of L)if(s.state!=='ready')await ledConnect(s)}
 function primary(c){
   if(c.kind==='ledgrp'){const L=stripsOf(c);if(L.some(s=>s.state!=='ready'))return ledConnectAll(L);const on=!L.some(s=>s.on);L.forEach(s=>ledPower(s,on));return}
@@ -314,6 +317,7 @@ function primary(c){
   if(['light','switch','fan'].includes(c.kind))return call(c.kind,'toggle',c.id);
   if(c.kind==='climate')return call('climate',s.state==='off'?'turn_on':'turn_off',c.id);
   if(c.kind==='vacuum')return call('vacuum',s.state==='cleaning'?'return_to_base':'start',c.id);
+  if(c.kind==='media_player')return call('media_player','media_play_pause',c.id);
 }
 
 function render(){
@@ -325,7 +329,7 @@ function render(){
   const avg=temps.length?Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10:null;
   $('#summary').innerHTML=(on?`<b>${on}</b> ${on===1?'συσκευή ανοιχτή':'συσκευές ανοιχτές'}`:'Όλα κλειστά')+(avg!=null?`, μέσα <b>${String(avg).replace('.',',')}°</b>`:'');
   const scenes=haScenes();
-  $('#scenes').innerHTML=BUILTIN.map(m=>`<button class="mode${m.id==='exit'?' exit':''}" data-mode="${m.id}">${svg(m.icon)}${m.name}</button>`).join('')+scenes.map(s=>`<button class="scene" data-scene="${esc(s.entity_id)}">${svg('scene')}${esc(s.attributes.friendly_name||s.entity_id)}</button>`).join('');
+  $('#scenes').innerHTML=BUILTIN.map(m=>`<button class="mode${m.id==='exit'?' exit':''}" data-mode="${m.id}">${svg(m.icon)}${m.name}</button>`).join('')+S.songs.map((x,i)=>`<button class="mode" data-song="${i}">${svg('music')}${esc(x.name)}</button>`).join('')+scenes.map(s=>`<button class="scene" data-scene="${esc(s.entity_id)}">${svg('scene')}${esc(s.attributes.friendly_name||s.entity_id)}</button>`).join('');
   $('#homeView').hidden=S.view!=='home';$('#modesView').hidden=S.view!=='modes';
   document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===S.view?'page':'false'));
   if(S.view==='modes')renderModes();
@@ -345,6 +349,7 @@ function renderModes(){
   const sc=haScenes();
   $('#modesView').innerHTML=`<h2 class="pagehead">Λειτουργίες</h2><p class="summary">Ένα πάτημα, πολλές συσκευές μαζί.</p>
   <div class="mgrid">${BUILTIN.map(m=>`<button class="mcard${m.id==='exit'?' exit':''}" data-mode="${m.id}">${svg(m.icon)}<span class="n">${m.name}</span><span class="d">${m.desc}</span></button>`).join('')}
+  ${S.songs.map((x,i)=>`<button class="mcard" data-song="${i}">${svg('music')}<span class="n">${esc(x.name)}</span><span class="d">Παίζει στο Spotify${S.spSource?' ('+esc(S.spSource)+')':''}</span></button>`).join('')}
   ${sc.map(s=>`<button class="mcard" data-scene="${esc(s.entity_id)}">${svg('scene')}<span class="n">${esc(s.attributes.friendly_name||s.entity_id)}</span><span class="d">Σενάριο του Home Assistant</span></button>`).join('')}</div>`;
 }
 function offAction(c){
@@ -371,7 +376,7 @@ async function runMode(id){
     toast(`Work mode: ${lights.length?'το Κεντρικό Φως άναψε':'δεν βρέθηκε Κεντρικό Φως'}${n?', οι ταινίες έγιναν μπλε':' (οι ταινίες δεν είναι συνδεδεμένες)'}`);
     closeSheet();render();return;
   }
-  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)'}
+  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);extra+=err?` · μουσική: ${err.toLowerCase()}`:', 🎵 παίζει'}
   if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
   const m=BUILTIN.find(x=>x.id===id);
   toast(id==='elena'?`${m.name}: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${extra}`:`${m.name}: ${plan.length?`έκλεισαν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}`:'όλα ήταν ήδη κλειστά'}${extra}`);
@@ -396,7 +401,7 @@ function tile(c){
   }
   let bar='';
   if(isLed(c)){const st=stripsOf(c).find(s=>s.state==='ready'&&s.on);if(st)bar=`<span class="bar" style="background:${st.color};box-shadow:0 0 18px 4px ${st.color}88"></span>`}
-  const icon=c.kind==='switch'?'switch':c.kind;
+  const icon=c.kind==='media_player'?'music':c.kind;
   return `<div class="tile ${t}${na?' off-line':''}" role="button" tabindex="0" data-card="${esc(c.id)}" data-act="${det?'open':'primary'}" aria-label="${esc(c.name)}, ${esc(stateText(c))}">
     ${bar}<button class="ic" data-card="${esc(c.id)}" data-act="primary" aria-label="${esc(c.name)}: εναλλαγή" ${na?'disabled':''}>${svg(icon)}</button>
     ${det?`<span class="more">${svg('dots')}</span>`:''}
@@ -446,7 +451,32 @@ function renderSheet(){
     body=`<div class="bigt">${b!=null?b+'%':'–'}</div><p class="sub" style="text-align:center">${esc(VAC[s.state]||s.state)}</p>
       <div class="row"><button class="pill" data-svc="vstart">${svg('play').replace('<svg','<svg width="16" height="16"')} Καθάρισε</button><button class="pill" data-svc="vpause">Παύση</button><button class="pill" data-svc="vdock">Στη βάση</button></div>`;
   }
+  if(c.kind==='media_player'){
+    const v=Math.round((a.volume_level??0)*100),src=a.source_list||[];
+    body=`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
+    <div class="ctl"><label for="mvol"><span>Ένταση</span><span data-out>${v}%</span></label><input id="mvol" type="range" min="0" max="100" value="${v}" data-k="mvol"></div>
+    ${src.length?`<div class="ctl"><label><span>Παίζει σε</span></label><div class="row" style="justify-content:flex-start">${src.map(x=>`<button class="pill" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}">${esc(x)}</button>`).join('')}</div></div>`:''}`;
+  }
   sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">${esc(c.area)}, ${esc(stateText(c))}</p>${body}`;
+}
+function spEntity(){return [...S.st.keys()].find(k=>k.startsWith('media_player.spotify'))}
+function toUri(link){const m=String(link).match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|album|playlist|artist|episode)\/([A-Za-z0-9]+)/);if(m)return `spotify:${m[1]}:${m[2]}`;if(/^spotify:(track|album|playlist|artist|episode):[A-Za-z0-9]+$/.test(link))return link;return null}
+async function playUri(uri,seek){
+  if(!S.live)return 'Δεν υπάρχει σύνδεση με το σπίτι';
+  const ent=spEntity();if(!ent)return 'Δεν βρέθηκε το Spotify στο Home Assistant';
+  if(S.spSource)await call('media_player','select_source',ent,{source:S.spSource});
+  await call('media_player','play_media',ent,{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'});
+  if(seek){setTimeout(()=>call('media_player','media_seek',ent,{seek_position:seek}),2500)}
+  return null;
+}
+async function playSong(i){
+  const song=S.songs[i];if(!song)return;
+  if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');return}
+  const ent=spEntity();if(!ent){toast('Δεν βρέθηκε το Spotify στο Home Assistant');return}
+  if(S.spSource)await call('media_player','select_source',ent,{source:S.spSource});
+  const type=song.uri.split(':')[1]==='track'?'music':'playlist';
+  await call('media_player','play_media',ent,{media_content_id:song.uri,media_content_type:type});
+  toast('🎵 '+song.name);
 }
 function renderLedMore(){
   $('#sheet').innerHTML=`<div class="grab"></div><h3>Προστέθηκε: ${esc(S.sheet.name)}</h3>
@@ -464,6 +494,13 @@ function renderSettings(){
   <label class="field"><span>Token πρόσβασης</span><input id="haTok" type="password" autocomplete="off" placeholder="Long-lived access token" value="${esc(c.token)}"></label>
   <p class="err" id="err"></p><button class="power" id="saveBtn">Αποθήκευση και σύνδεση</button>
   <p class="help">Το token το φτιάχνεις στο Home Assistant: όνομά σου κάτω αριστερά → Security → Long-lived access tokens → Create token. Το Tailscale πρέπει να είναι ανοιχτό στο κινητό.</p></div>
+  <div class="sect"><h4>Spotify: τα τραγούδια μου</h4>
+  <div class="list">${S.songs.map((x,i)=>`<div class="it">${svg('music').replace('<svg','<svg width="20" height="20"')}<span>${esc(x.name)}</span><button data-rmsong="${i}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχεις προσθέσει τραγούδια.</p>'}</div>
+  <label class="field"><span>Όνομα κουμπιού</span><input id="songName" placeholder="π.χ. Το τραγούδι μας"></label>
+  <label class="field"><span>Link από το Spotify (Κοινοποίηση → Αντιγραφή συνδέσμου)</span><input id="songLink" inputmode="url" placeholder="https://open.spotify.com/track/..."></label>
+  <button class="secondary" id="addSong">Προσθήκη τραγουδιού</button>
+  <label class="field"><span>Πού να παίζει</span>${(()=>{const e=spEntity(),l=e?(S.st.get(e).attributes.source_list||[]):[];return l.length?`<div class="row" style="justify-content:flex-start">${l.map(x=>`<button class="pill" data-spsrc="${esc(x)}" aria-pressed="${S.spSource===x}">${esc(x)}</button>`).join('')}</div>`:`<input id="spSrc" placeholder="Όνομα συσκευής Spotify, π.χ. το κινητό σου" value="${esc(S.spSource)}">`})()}</label>
+  <p class="help">Άνοιξε το Spotify στο κινητό τουλάχιστον μία φορά πρόσφατα, για να εμφανίζεται ως συσκευή. Αν είναι συνδεδεμένο σε Bluetooth ηχείο, η μουσική παίζει εκεί.</p></div>
   <div class="sect"><h4>Ταινίες LED (Bluetooth)</h4>
   ${bt?`<div class="list">${[...S.strips.values()].map(s=>`<div class="it">${svg('led').replace('<svg','<svg width="20" height="20"')}<span>${esc(s.name)}</span><button data-rmstrip="${esc(s.id)}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχουν προστεθεί ταινίες.</p>'}</div>
   ${S.strips.size>1?`<label class="chk"><input type="checkbox" id="ledGroupChk" ${S.ledGroup?'checked':''}><span>Χειρισμός όλων μαζί, σε μία κάρτα</span></label>`:''}
@@ -526,6 +563,10 @@ document.addEventListener('click',async e=>{
   const md=e.target.closest('[data-mode]');if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
   const rmode=e.target.closest('[data-runmode]');if(rmode){runMode(rmode.dataset.runmode);return}
   if(e.target.id==='exitClean'){S.modeClean=e.target.checked;return}
+  const sg=e.target.closest('[data-song]');if(sg){playSong(+sg.dataset.song);return}
+  const rs2=e.target.closest('[data-rmsong]');if(rs2){S.songs.splice(+rs2.dataset.rmsong,1);store.set('home.songs',S.songs);renderSettings();render();return}
+  const ss=e.target.closest('[data-spsrc]');if(ss){S.spSource=ss.dataset.spsrc;store.set('home.spSource',S.spSource);renderSettings();return}
+  if(e.target.id==='addSong'){const n=$('#songName').value.trim(),u=toUri($('#songLink').value.trim());if(!n||!u){toast('Βάλε όνομα και σωστό link του Spotify');return}S.songs.push({name:n,uri:u});store.set('home.songs',S.songs);renderSettings();render();toast('Προστέθηκε: '+n);return}
   if(e.target.id==='ledGroupChk'){S.ledGroup=e.target.checked;store.set('home.ledGroup',S.ledGroup);render();return}
   const rm=e.target.closest('[data-room]');if(rm){S.room=rm.dataset.room;render();return}
   const th=e.target.closest('[data-theme]');if(th&&th.tagName==='BUTTON'){S.theme=th.dataset.theme;store.set('home.theme',S.theme);applyTheme();renderSettings();return}
@@ -559,6 +600,8 @@ document.addEventListener('click',async e=>{
       tdown:()=>call('climate','set_temperature',c.id,{temperature:Math.max(a.min_temp??16,(a.temperature??22)-step)}),
       mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
+      mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
+      msrc:()=>call('media_player','select_source',c.id,{source:sv.dataset.v}),
       vstart:()=>call('vacuum','start',c.id),vpause:()=>call('vacuum','pause',c.id),vdock:()=>call('vacuum','return_to_base',c.id)})[k]?.();
   }
 });
@@ -567,10 +610,12 @@ document.addEventListener('input',e=>{if(e.target.type!=='range')return;const o=
 document.addEventListener('change',e=>{
   const k=e.target.dataset.k;if(!k||!S.sheet)return;const c=findCard(S.sheet.id);if(!c)return;const v=+e.target.value;
   if(k==='bright')call('light','turn_on',c.id,{brightness_pct:v});
+  if(k==='mvol')call('media_player','volume_set',c.id,{volume_level:v/100});
   if(k==='ledbri'){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>{s.bri=v;ledPersist(s);ledSend(s,F.bright(v))});render()}
   if(k==='ledpick'){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>ledColor(s,e.target.value));renderSheet()}
   e.target.blur();
 });
+document.addEventListener('change',e=>{if(e.target.id==='spSrc'){S.spSource=e.target.value.trim();store.set('home.spSource',S.spSource)}});
 $('#dlg').addEventListener('close',()=>{S.sheet=null});
 $('#settingsBtn').innerHTML=svg('gear');
 document.querySelectorAll('[data-ic]').forEach(el=>el.outerHTML=svg(el.dataset.ic));
