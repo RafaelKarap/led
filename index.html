@@ -189,9 +189,9 @@ const BUILTIN=[
 {id:'exit',name:'Έξοδος',icon:'door',desc:'Κλείνει όλα τα φώτα, τις ταινίες και τα κλιματιστικά.'},
 {id:'night',name:'Καληνύχτα',icon:'moon',desc:'Σβήνει φώτα και ταινίες. Κλείνει τα κλιματιστικά εκτός από του υπνοδωματίου.'},
 {id:'movie',name:'Ταινία',icon:'screen',desc:'Σβήνει τα φώτα και ανάβει τις ταινίες μωβ, χαμηλά.'},
-{id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως, κάνει τις ταινίες κόκκινες και παίζει το τραγούδι από το 0:48.'},
+{id:'elena',name:'Elena mode',icon:'heart',desc:'Παίζει το τραγούδι, και μετά σβήνει το Κεντρικό Φως και κάνει τις ταινίες κόκκινες.'},
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'}];
-const S={spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const S={elenaDelay:store.get('home.elenaDelay',5),elenaSeek:store.get('home.elenaSeek',48),spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 const idb={open(){return new Promise((res,rej)=>{const r=indexedDB.open('spiti',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
   async get(k){try{const db=await idb.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
@@ -379,9 +379,9 @@ function openSpotifyApp(uri){
 async function runMode(id){
   if(id==='elena'){
     openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
-    const music=playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);
+    const music=playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',S.elenaSeek);
     toast('❤️ Elena mode…');
-    await new Promise(r=>setTimeout(r,5000));
+    await new Promise(r=>setTimeout(r,S.elenaDelay*1000));
     const plan=modePlan('elena');plan.forEach(offAction);
     let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}
     const err=await music;
@@ -531,6 +531,10 @@ function renderSettings(){
   <label class="field"><span>Token πρόσβασης</span><input id="haTok" type="password" autocomplete="off" placeholder="Long-lived access token" value="${esc(c.token)}"></label>
   <p class="err" id="err"></p><button class="power" id="saveBtn">Αποθήκευση και σύνδεση</button>
   <p class="help">Το token το φτιάχνεις στο Home Assistant: όνομά σου κάτω αριστερά → Security → Long-lived access tokens → Create token. Το Tailscale πρέπει να είναι ανοιχτό στο κινητό.</p></div>
+  <div class="sect"><h4>❤️ Elena mode</h4>
+  <div class="ctl"><label for="elDelay"><span>Τα φώτα αλλάζουν μετά από</span><span id="elDelayOut">${S.elenaDelay}″</span></label><input id="elDelay" type="range" min="0" max="20" step="1" value="${S.elenaDelay}"></div>
+  <div class="ctl"><label for="elSeek"><span>Το τραγούδι ξεκινάει από</span><span id="elSeekOut">${Math.floor(S.elenaSeek/60)}:${String(S.elenaSeek%60).padStart(2,'0')}</span></label><input id="elSeek" type="range" min="0" max="180" step="1" value="${S.elenaSeek}"></div>
+  <p class="help">Οι αλλαγές αποθηκεύονται αμέσως.</p></div>
   <div class="sect"><h4>Spotify: τα τραγούδια μου</h4>
   <div class="list">${S.songs.map((x,i)=>`<div class="it">${svg('music').replace('<svg','<svg width="20" height="20"')}<span>${esc(x.name)}</span><button data-rmsong="${i}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχεις προσθέσει τραγούδια.</p>'}</div>
   <label class="field"><span>Όνομα κουμπιού</span><input id="songName" placeholder="π.χ. Το τραγούδι μας"></label>
@@ -645,7 +649,9 @@ document.addEventListener('click',async e=>{
   }
 });
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('tile')){e.preventDefault();e.target.click()}});
-document.addEventListener('input',e=>{if(e.target.type!=='range')return;const o=e.target.closest('.sheet')?.querySelector('[data-out]');if(o)o.textContent=e.target.value+'%'});
+document.addEventListener('input',e=>{
+  if(e.target.id==='elDelay'){S.elenaDelay=+e.target.value;store.set('home.elenaDelay',S.elenaDelay);$('#elDelayOut').textContent=S.elenaDelay+'″';return}
+  if(e.target.id==='elSeek'){S.elenaSeek=+e.target.value;store.set('home.elenaSeek',S.elenaSeek);$('#elSeekOut').textContent=Math.floor(S.elenaSeek/60)+':'+String(S.elenaSeek%60).padStart(2,'0');return}if(e.target.type!=='range')return;const o=e.target.closest('.sheet')?.querySelector('[data-out]');if(o)o.textContent=e.target.value+'%'});
 document.addEventListener('change',e=>{
   const k=e.target.dataset.k;if(!k||!S.sheet)return;const c=findCard(S.sheet.id);if(!c)return;const v=+e.target.value;
   if(k==='bright')call('light','turn_on',c.id,{brightness_pct:v});
