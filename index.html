@@ -108,6 +108,28 @@ input[type=range]{width:100%;height:40px;accent-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:8px}
 .list .it{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--card-border)}
 .list .it button{margin-left:auto;border:0;background:transparent;color:#c4462f;font-weight:500}
+.wrap{padding-bottom:120px}
+.nav{position:fixed;left:0;right:0;bottom:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background-color:var(--bg);background-image:var(--bg-img);border-top:1px solid var(--line);z-index:20}
+.nav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.nav button{border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;border-radius:16px;font-size:.78em;font-weight:500}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--ink);font-weight:700}
+.nav svg{width:22px;height:22px}
+.mode{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-weight:600}
+.mode svg{width:18px;height:18px;color:var(--accent)}
+.mode.exit{background:#b8432c;border-color:#b8432c;color:#fff}
+.mode.exit svg{color:#fff}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.mcard{display:flex;flex-direction:column;gap:8px;text-align:left;padding:16px;min-height:130px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--card-border);box-shadow:var(--card-shadow)}
+.mcard svg{width:26px;height:26px;color:var(--accent)}
+.mcard .n{font-size:1.1em;font-weight:700}
+.mcard .d{font-size:.86em;color:var(--muted);line-height:1.35}
+.mcard.exit{grid-column:1/-1;background:#b8432c;color:#fff;border-color:#b8432c;box-shadow:none;min-height:0}
+.mcard.exit svg,.mcard.exit .d{color:#ffe1d8}
+.pagehead{font-size:calc(28px*var(--fs));font-weight:700;margin:6px 0 2px}
+.chk{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);margin-top:12px}
+.chk input{width:22px;height:22px;accent-color:var(--accent)}
+.offlist{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+.danger{width:100%;margin-top:18px;border:0;border-radius:16px;padding:15px;font-weight:700;background:#b8432c;color:#fff}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--pill);color:var(--pill-ink);padding:11px 18px;border-radius:14px;font-size:.92em;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -123,10 +145,18 @@ input[type=range]{width:100%;height:40px;accent-color:var(--accent)}
     <button class="iconbtn" id="settingsBtn" aria-label="Ρυθμίσεις"></button>
   </header>
   <div class="status" id="status" hidden><span id="statusText"></span><button id="statusBtn">Ρυθμίσεις</button></div>
-  <div class="scroller scenes" id="scenes" hidden></div>
+  <div id="homeView">
+  <div class="scroller scenes" id="scenes"></div>
   <div class="scroller rooms" id="rooms" role="toolbar" aria-label="Δωμάτια"></div>
   <main id="main"></main>
+  </div>
+  <div id="modesView" hidden></div>
 </div>
+<nav class="nav" aria-label="Κύρια πλοήγηση"><div class="in">
+  <button data-nav="home" aria-current="page"><span data-ic="home"></span>Σπίτι</button>
+  <button data-nav="modes"><span data-ic="mode"></span>Λειτουργίες</button>
+  <button data-nav="settings"><span data-ic="gear"></span>Ρυθμίσεις</button>
+</div></nav>
 <dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
 <div class="toast" id="toast" role="status"></div>
 <script>
@@ -142,7 +172,7 @@ scene:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
 gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
 dots:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
 up:'<path d="M12 5v14M5 12h14"/>',down:'<path d="M5 12h14"/>',
-play:'<path d="M7 4v16l13-8z"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
+play:'<path d="M7 4v16l13-8z"/>',door:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',mode:'<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
 };
 const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||I.switch}</svg>`;
 const $=s=>document.querySelector(s);
@@ -155,7 +185,11 @@ const DOMS=['light','switch','climate','vacuum','fan'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
 const VAC={cleaning:'Καθαρίζει',docked:'Στη βάση',returning:'Επιστρέφει',idle:'Αδρανής',paused:'Σε παύση',error:'Σφάλμα',unavailable:'Μη διαθέσιμη'};
 const JOB={wash:'Πλύση',washing:'Πλύση',rinse:'Ξέβγαλμα',rinsing:'Ξέβγαλμα',spin:'Στύψιμο',spinning:'Στύψιμο',drying:'Στέγνωμα',finish:'Τελείωσε',finished:'Τελείωσε',weight_sensing:'Ζύγισμα',pre_wash:'Πρόπλυση',delay_wash:'Καθυστέρηση',none:''};
-const S={cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const BUILTIN=[
+{id:'exit',name:'Έξοδος',icon:'door',desc:'Κλείνει όλα τα φώτα, τις ταινίες και τα κλιματιστικά.'},
+{id:'night',name:'Καληνύχτα',icon:'moon',desc:'Σβήνει φώτα και ταινίες. Κλείνει τα κλιματιστικά εκτός από του υπνοδωματίου.'},
+{id:'movie',name:'Ταινία',icon:'screen',desc:'Σβήνει τα φώτα και ανάβει τις ταινίες μωβ, χαμηλά.'}];
+const S={ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
 function applyTheme(){
@@ -224,7 +258,9 @@ function cards(){
       out.push({kind:dom,id,area:areaName(areaOf(id)),name:s.attributes.friendly_name||id});
     }
   }
-  for(const st of S.strips.values())out.push({kind:'led',id:'led:'+st.id,area:'Σαλόνι',name:st.name});
+  if(S.ledGroup&&S.strips.size>1)out.push({kind:'ledgrp',id:'ledgrp',area:'Σαλόνι',name:'Ταινίες LED'});
+  else for(const st of S.strips.values())out.push({kind:'led',id:'led:'+st.id,area:'Σαλόνι',name:st.name});
+  if(!S.strips.size&&navigator.bluetooth)out.push({kind:'ledadd',id:'ledadd',area:'Σαλόνι',name:'Ταινίες LED'});
   return out;
 }
 function washerInfo(c){
@@ -236,7 +272,11 @@ function washerInfo(c){
   const end=comp&&run&&!isNaN(Date.parse(comp.state))?new Date(comp.state).toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}):null;
   return {run,pause,mins,text,end};
 }
+function stripsOf(c){return c.kind==='ledgrp'?[...S.strips.values()]:[S.strips.get(c.id.slice(4))].filter(Boolean)}
+function isLed(c){return c.kind==='led'||c.kind==='ledgrp'}
 function isOn(c){
+  if(c.kind==='ledadd')return false;
+  if(c.kind==='ledgrp')return stripsOf(c).some(s=>s.state==='ready'&&s.on);
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));return s&&s.state==='ready'&&s.on}
   if(c.kind==='washer')return washerInfo(c).run;
   const s=S.st.get(c.id);if(!s)return false;
@@ -251,6 +291,7 @@ function tone(c){
   return 'on';
 }
 function stateText(c){
+  if(c.kind==='ledgrp'){const L=stripsOf(c),R=L.filter(s=>s.state==='ready');if(L.some(s=>s.state==='connecting'))return 'Σύνδεση…';if(!R.length)return 'Πάτα για σύνδεση (μόνο στο σπίτι)';const on=R.some(s=>s.on);return (R.length<L.length?`${R.length}/${L.length} συνδεδεμένες, `:'')+(on?`αναμμένες, ${R[0].bri}%`:'σβηστές')}
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return '';if(s.state==='ready')return s.on?`Αναμμένη, ${s.bri}%`:'Σβηστή';if(s.state==='connecting')return 'Σύνδεση…';return 'Πάτα για σύνδεση (μόνο στο σπίτι)'}
   if(c.kind==='washer'){const w=washerInfo(c);return w.run&&w.mins!=null?`${w.text}, ${w.mins}′`:w.text}
   const s=S.st.get(c.id);if(!s)return '';const a=s.attributes;
@@ -260,8 +301,10 @@ function stateText(c){
   if(c.kind==='vacuum'){const b=a.battery_level??devBattery(c.id);return (VAC[s.state]||s.state)+(b!=null?`, ${b}%`:'')}
   return s.state==='on'?'Αναμμένο':'Σβηστό';
 }
-function hasSheet(c){return ['light','climate','vacuum','washer','led'].includes(c.kind)}
+function hasSheet(c){return ['light','climate','vacuum','washer','led','ledgrp'].includes(c.kind)}
+async function ledConnectAll(L){for(const s of L)if(s.state!=='ready')await ledConnect(s)}
 function primary(c){
+  if(c.kind==='ledgrp'){const L=stripsOf(c);if(L.some(s=>s.state!=='ready'))return ledConnectAll(L);const on=!L.some(s=>s.on);L.forEach(s=>ledPower(s,on));return}
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return;if(s.state==='ready')return ledPower(s,!s.on);return ledConnect(s)}
   if(c.kind==='washer')return openSheet(c);
   const s=S.st.get(c.id);if(!s||s.state==='unavailable')return;
@@ -278,9 +321,11 @@ function render(){
   const temps=cs.filter(c=>c.kind==='climate').map(c=>S.st.get(c.id)?.attributes.current_temperature).filter(v=>typeof v==='number');
   const avg=temps.length?Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10:null;
   $('#summary').innerHTML=(on?`<b>${on}</b> ${on===1?'συσκευή ανοιχτή':'συσκευές ανοιχτές'}`:'Όλα κλειστά')+(avg!=null?`, μέσα <b>${String(avg).replace('.',',')}°</b>`:'');
-  const scenes=S.live?[...S.st.values()].filter(s=>/^(scene|script)\./.test(s.entity_id)&&!hidden(S.reg.get(s.entity_id))):[];
-  $('#scenes').hidden=!scenes.length;
-  $('#scenes').innerHTML=scenes.map(s=>`<button class="scene" data-scene="${esc(s.entity_id)}">${svg('scene')}${esc(s.attributes.friendly_name||s.entity_id)}</button>`).join('');
+  const scenes=haScenes();
+  $('#scenes').innerHTML=BUILTIN.map(m=>`<button class="mode${m.id==='exit'?' exit':''}" data-mode="${m.id}">${svg(m.icon)}${m.name}</button>`).join('')+scenes.map(s=>`<button class="scene" data-scene="${esc(s.entity_id)}">${svg('scene')}${esc(s.attributes.friendly_name||s.entity_id)}</button>`).join('');
+  $('#homeView').hidden=S.view!=='home';$('#modesView').hidden=S.view!=='modes';
+  document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===S.view?'page':'false'));
+  if(S.view==='modes')renderModes();
   const rooms=[...new Set(cs.map(c=>c.area))].sort((a,b)=>{const ia=ORDER.indexOf(a),ib=ORDER.indexOf(b);if(a==='Άλλα')return 1;if(b==='Άλλα')return -1;return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'el')});
   if(S.room!=='all'&&!rooms.includes(S.room))S.room='all';
   $('#rooms').innerHTML=`<button class="chip" data-room="all" aria-pressed="${S.room==='all'}">Όλα</button>`+rooms.map(r=>`<button class="chip" data-room="${esc(r)}" aria-pressed="${S.room===r}">${esc(r)}</button>`).join('');
@@ -290,9 +335,45 @@ function render(){
     const t=list.filter(c=>c.kind==='climate').map(c=>S.st.get(c.id)?.attributes.current_temperature).find(v=>typeof v==='number');
     return `<section><div class="roomhead"><h2>${esc(r)}</h2>${t!=null?`<span>${String(t).replace('.',',')}°</span>`:''}</div><div class="grid">${list.map(tile).join('')}</div></section>`;
   }).join(''):`<div class="empty">${S.cfg.token?'Δεν βρέθηκαν συσκευές ακόμα.':'Πάτα το γρανάζι πάνω δεξιά και βάλε το token του Home Assistant για να εμφανιστούν οι συσκευές σου.'}</div>`;
-  if(S.sheet&&$('#dlg').open&&document.activeElement?.type!=='range'&&S.sheet.kind!=='settings')renderSheet();
+  if(S.sheet&&$('#dlg').open&&document.activeElement?.type!=='range'&&S.sheet.kind==='card')renderSheet();
+}
+function haScenes(){return S.live?[...S.st.values()].filter(s=>/^(scene|script)\./.test(s.entity_id)&&!hidden(S.reg.get(s.entity_id))):[]}
+function renderModes(){
+  const sc=haScenes();
+  $('#modesView').innerHTML=`<h2 class="pagehead">Λειτουργίες</h2><p class="summary">Ένα πάτημα, πολλές συσκευές μαζί.</p>
+  <div class="mgrid">${BUILTIN.map(m=>`<button class="mcard${m.id==='exit'?' exit':''}" data-mode="${m.id}">${svg(m.icon)}<span class="n">${m.name}</span><span class="d">${m.desc}</span></button>`).join('')}
+  ${sc.map(s=>`<button class="mcard" data-scene="${esc(s.entity_id)}">${svg('scene')}<span class="n">${esc(s.attributes.friendly_name||s.entity_id)}</span><span class="d">Σενάριο του Home Assistant</span></button>`).join('')}</div>`;
+}
+function offAction(c){
+  if(isLed(c)){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>ledPower(s,false));return}
+  if(['light','switch','fan'].includes(c.kind))return call(c.kind,'turn_off',c.id);
+  if(c.kind==='climate')return call('climate','turn_off',c.id);
+}
+function modePlan(id){
+  const cs=cards().filter(isOn);
+  if(id==='exit')return cs.filter(c=>['light','switch','fan','climate','led','ledgrp'].includes(c.kind));
+  if(id==='night')return cs.filter(c=>['light','switch','fan','led','ledgrp'].includes(c.kind)||(c.kind==='climate'&&c.area!=='Υπνοδωμάτιο'));
+  if(id==='movie')return cs.filter(c=>['light','switch','fan'].includes(c.kind));
+  return [];
+}
+async function runMode(id){
+  const plan=modePlan(id);plan.forEach(offAction);
+  let extra='';
+  if(id==='movie'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=40;await ledSend(s,F.power(true));await ledColor(s,'#b46bff');await ledSend(s,F.bright(40));n++}if(!n)extra=' (οι ταινίες δεν είναι συνδεδεμένες)'}
+  if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
+  const m=BUILTIN.find(x=>x.id===id);
+  toast(`${m.name}: ${plan.length?`έκλεισαν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}`:'όλα ήταν ήδη κλειστά'}${extra}`);
+  closeSheet();render();
+}
+function renderModeSheet(){
+  const plan=modePlan('exit'),vac=cards().find(c=>c.kind==='vacuum');
+  $('#sheet').innerHTML=`<div class="grab"></div><h3>Έξοδος</h3><p class="sub">${plan.length?`Θα κλείσουν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}:`:'Όλα είναι ήδη κλειστά.'}</p>
+  ${plan.length?`<ul class="offlist">${plan.map(c=>`<li>${esc(c.name)}, ${esc(c.area)}</li>`).join('')}</ul>`:''}
+  ${vac?`<label class="chk"><input type="checkbox" id="exitClean" ${S.modeClean?'checked':''}><span>Στείλε και τον ${esc(vac.name)} να καθαρίσει</span></label>`:''}
+  <button class="danger" data-runmode="exit">Κλείσε τα πάντα</button>`;
 }
 function tile(c){
+  if(c.kind==='ledadd')return `<div class="tile" role="button" tabindex="0" data-card="ledadd" data-act="ledadd" aria-label="Προσθήκη ταινιών LED"><span class="ic">${svg('led')}</span><div><div class="name">Ταινίες LED</div><div class="st">Πάτα για προσθήκη, μόνο στο σπίτι</div></div></div>`;
   const t=tone(c),s=S.st.get(c.id),na=c.kind!=='led'&&c.kind!=='washer'&&(!s||s.state==='unavailable');
   const det=hasSheet(c);
   if(c.kind==='washer'){
@@ -302,7 +383,7 @@ function tile(c){
       ${w.run?`<span class="prog"><span style="width:${pct}%"></span></span>`:''}</div>`;
   }
   let bar='';
-  if(c.kind==='led'){const st=S.strips.get(c.id.slice(4));if(st&&st.state==='ready'&&st.on)bar=`<span class="bar" style="background:${st.color};box-shadow:0 0 18px 4px ${st.color}88"></span>`}
+  if(isLed(c)){const st=stripsOf(c).find(s=>s.state==='ready'&&s.on);if(st)bar=`<span class="bar" style="background:${st.color};box-shadow:0 0 18px 4px ${st.color}88"></span>`}
   const icon=c.kind==='switch'?'switch':c.kind;
   return `<div class="tile ${t}${na?' off-line':''}" role="button" tabindex="0" data-card="${esc(c.id)}" data-act="${det?'open':'primary'}" aria-label="${esc(c.name)}, ${esc(stateText(c))}">
     ${bar}<button class="ic" data-card="${esc(c.id)}" data-act="primary" aria-label="${esc(c.name)}: εναλλαγή" ${na?'disabled':''}>${svg(icon)}</button>
@@ -315,18 +396,19 @@ function openSheet(c){S.sheet={kind:'card',id:c.id};renderSheet();const g=$('#dl
 function openSettings(){S.sheet={kind:'settings'};renderSettings();const g=$('#dlg');if(!g.open)g.showModal()}
 function closeSheet(){S.sheet=null;const g=$('#dlg');if(g.open)g.close()}
 function renderSheet(){
-  if(!S.sheet)return;if(S.sheet.kind==='settings')return renderSettings();
+  if(!S.sheet)return;if(S.sheet.kind==='settings')return renderSettings();if(S.sheet.kind==='mode')return renderModeSheet();
   const c=findCard(S.sheet.id);if(!c){closeSheet();return}
   const sh=$('#sheet');let body='';
-  if(c.kind==='led'){
-    const st=S.strips.get(c.id.slice(4));
+  if(isLed(c)){
+    const L=stripsOf(c),R=L.filter(s=>s.state==='ready'),st=R[0]||L[0];
     const COLORS=['#ff3b3b','#ff8a1f','#ffd21f','#2fe07a','#1fd8ff','#3b5bff','#b46bff','#ff4fae','#ffffff','#ffc98a','#6b8cff','#7cff9a','#ff6b6b'];
-    if(st.state!=='ready')body=`<p class="sub">Η ταινία δεν είναι συνδεδεμένη. Κλείσε την εφαρμογή duoCo και πάτα σύνδεση, μέσα στο σπίτι.</p><button class="power" data-svc="ledconn">Σύνδεση</button>`;
+    const conn=L.length>1?`<p class="sub">${L.map(s=>`${esc(s.name)}: ${s.state==='ready'?'συνδεδεμένη':s.state==='connecting'?'σύνδεση…':'αποσυνδεδεμένη'}`).join(' · ')}</p>`:'';
+    if(!R.length)body=`<p class="sub">${L.length>1?'Οι ταινίες δεν είναι συνδεδεμένες':'Η ταινία δεν είναι συνδεδεμένη'}. Κλείσε την εφαρμογή duoCo και πάτα σύνδεση, μέσα στο σπίτι.</p><button class="power" data-svc="ledconn">Σύνδεση</button>`;
     else body=`<div class="dots">${COLORS.map(x=>`<button class="dot" style="background:${x}" data-svc="ledcolor" data-v="${x}" aria-label="Χρώμα ${x}" aria-pressed="${st.color===x}"></button>`).join('')}<label class="dot picker" aria-label="Δικό σου χρώμα"><input type="color" data-k="ledpick" value="${st.color}"></label></div>
       <div class="ctl"><label for="lb"><span>Φωτεινότητα</span><span data-out>${st.bri}%</span></label><input id="lb" type="range" min="1" max="100" value="${st.bri}" data-k="ledbri"></div>
       <div class="ctl"><label><span>Εφέ</span><span>${st.effect} από 212</span></label><div class="fx"><button data-svc="fxp" aria-label="Προηγούμενο εφέ">‹</button><div class="num">${st.effect}</div><button data-svc="fxn" aria-label="Επόμενο εφέ">›</button></div></div>
-      <button class="power" data-svc="ledpower">${st.on?'Σβήσιμο':'Άναμμα'}</button>`;
-    sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">Σαλόνι, Bluetooth</p>${body}`;return;
+      <button class="power" data-svc="ledpower">${R.some(s=>s.on)?'Σβήσιμο':'Άναμμα'}</button>${R.length<L.length?'<button class="secondary" data-svc="ledconn">Σύνδεση των υπόλοιπων</button>':''}`;
+    sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">Σαλόνι, Bluetooth${L.length>1?`, ${L.length} ταινίες μαζί`:''}</p>${conn}${body}`;return;
   }
   if(c.kind==='washer'){
     const w=washerInfo(c);
@@ -366,6 +448,7 @@ function renderSettings(){
   <p class="help">Το token το φτιάχνεις στο Home Assistant: όνομά σου κάτω αριστερά → Security → Long-lived access tokens → Create token. Το Tailscale πρέπει να είναι ανοιχτό στο κινητό.</p></div>
   <div class="sect"><h4>Ταινίες LED (Bluetooth)</h4>
   ${bt?`<div class="list">${[...S.strips.values()].map(s=>`<div class="it">${svg('led').replace('<svg','<svg width="20" height="20"')}<span>${esc(s.name)}</span><button data-rmstrip="${esc(s.id)}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχουν προστεθεί ταινίες.</p>'}</div>
+  ${S.strips.size>1?`<label class="chk"><input type="checkbox" id="ledGroupChk" ${S.ledGroup?'checked':''}><span>Χειρισμός όλων μαζί, σε μία κάρτα</span></label>`:''}
   <button class="secondary" id="addStrip">Προσθήκη ταινίας</button><button class="secondary" id="addStripAll">Δεν εμφανίζεται; Όλες οι συσκευές Bluetooth</button>
   <p class="help">Κλείσε πρώτα την εφαρμογή duoCo. Οι ταινίες δουλεύουν μόνο μέσα στο σπίτι.</p>`:'<p class="help">Αυτός ο browser δεν υποστηρίζει Bluetooth. Χρησιμοποίησε τον Chrome σε Android.</p>'}</div>`;
 }
@@ -399,6 +482,11 @@ function ledColor(s,h){s.color=h;s.on=true;ledPersist(s);render();return ledSend
 
 document.addEventListener('click',async e=>{
   const sc=e.target.closest('[data-scene]');if(sc){const id=sc.dataset.scene;call(id.split('.')[0],'turn_on',id);toast('Ενεργοποιήθηκε: '+sc.textContent.trim());return}
+  const nv=e.target.closest('[data-nav]');if(nv){if(nv.dataset.nav==='settings'){openSettings();return}S.view=nv.dataset.nav;window.scrollTo(0,0);render();return}
+  const md=e.target.closest('[data-mode]');if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
+  const rmode=e.target.closest('[data-runmode]');if(rmode){runMode(rmode.dataset.runmode);return}
+  if(e.target.id==='exitClean'){S.modeClean=e.target.checked;return}
+  if(e.target.id==='ledGroupChk'){S.ledGroup=e.target.checked;store.set('home.ledGroup',S.ledGroup);render();return}
   const rm=e.target.closest('[data-room]');if(rm){S.room=rm.dataset.room;render();return}
   const th=e.target.closest('[data-theme]');if(th&&th.tagName==='BUTTON'){S.theme=th.dataset.theme;store.set('home.theme',S.theme);applyTheme();renderSettings();return}
   if(e.target.closest('#settingsBtn')||e.target.closest('#statusBtn')){openSettings();return}
@@ -413,13 +501,16 @@ document.addEventListener('click',async e=>{
   }
   if(e.target===$('#dlg')){closeSheet();return}
   const act=e.target.closest('[data-act]');
+  if(act&&act.dataset.act==='ledadd'&&!act.closest('dialog')){ledAdd(false);return}
   if(act&&!act.closest('dialog')){const c=findCard(act.dataset.card);if(!c)return;if(act.dataset.act==='open')openSheet(c);else primary(c);return}
   const sv=e.target.closest('[data-svc]');
   if(sv&&S.sheet&&S.sheet.kind==='card'){
     const c=findCard(S.sheet.id);if(!c)return;const k=sv.dataset.svc;
-    if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));
-      if(k==='ledconn')ledConnect(s);if(k==='ledpower')ledPower(s,!s.on);if(k==='ledcolor')ledColor(s,sv.dataset.v);
-      if(k==='fxn'||k==='fxp'){s.effect=(s.effect+(k==='fxn'?1:212))%213;s.on=true;ledPersist(s);ledSend(s,F.effect(s.effect))}
+    if(isLed(c)){const L=stripsOf(c),R=L.filter(s=>s.state==='ready');
+      if(k==='ledconn')ledConnectAll(L);
+      if(k==='ledpower'){const on=!R.some(s=>s.on);R.forEach(s=>ledPower(s,on))}
+      if(k==='ledcolor')R.forEach(s=>ledColor(s,sv.dataset.v));
+      if(k==='fxn'||k==='fxp'){const ef=((R[0]?R[0].effect:0)+(k==='fxn'?1:212))%213;R.forEach(s=>{s.effect=ef;s.on=true;ledPersist(s);ledSend(s,F.effect(ef))})}
       renderSheet();return}
     const s=S.st.get(c.id);if(!s)return;const a=s.attributes,step=a.target_temp_step||1;
     ({toggle:()=>call(c.kind,'toggle',c.id),
@@ -435,12 +526,13 @@ document.addEventListener('input',e=>{if(e.target.type!=='range')return;const o=
 document.addEventListener('change',e=>{
   const k=e.target.dataset.k;if(!k||!S.sheet)return;const c=findCard(S.sheet.id);if(!c)return;const v=+e.target.value;
   if(k==='bright')call('light','turn_on',c.id,{brightness_pct:v});
-  if(k==='ledbri'){const s=S.strips.get(c.id.slice(4));s.bri=v;ledPersist(s);ledSend(s,F.bright(v));render()}
-  if(k==='ledpick'){ledColor(S.strips.get(c.id.slice(4)),e.target.value);renderSheet()}
+  if(k==='ledbri'){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>{s.bri=v;ledPersist(s);ledSend(s,F.bright(v))});render()}
+  if(k==='ledpick'){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>ledColor(s,e.target.value));renderSheet()}
   e.target.blur();
 });
 $('#dlg').addEventListener('close',()=>{S.sheet=null});
 $('#settingsBtn').innerHTML=svg('gear');
+document.querySelectorAll('[data-ic]').forEach(el=>el.outerHTML=svg(el.dataset.ic));
 
 applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
