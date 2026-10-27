@@ -484,10 +484,11 @@ async function playUri(uri,seek){
   const ent=spEntity();if(!ent)return 'δεν βρέθηκε το Spotify στο Home Assistant';
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const err=await spReady(ent);if(err)return err;
-  const cur=S.st.get(ent)?.attributes.source;
-  if(S.spSource&&cur&&cur!==S.spSource){try{await rawCall('media_player','select_source',ent,{source:S.spSource});await wait(1500)}catch(e){}}
   try{await rawCall('media_player','play_media',ent,{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'})}catch(e){return e&&e.message||'δεν ξεκίνησε η αναπαραγωγή'}
-  if(seek){await wait(2500);try{await rawCall('media_player','media_seek',ent,{seek_position:seek})}catch(e){}await wait(1500);try{await rawCall('homeassistant','update_entity',ent)}catch(e){}await wait(700);if(S.st.get(ent)?.state!=='playing'){try{await rawCall('media_player','media_play',ent)}catch(e){}}}
+  await wait(2500);
+  if(seek){try{await rawCall('media_player','media_seek',ent,{seek_position:seek})}catch(e){}await wait(1200)}
+  try{await rawCall('homeassistant','update_entity',ent)}catch(e){}await wait(800);
+  if(S.st.get(ent)?.state!=='playing'){try{await rawCall('media_player','media_play',ent)}catch(e){}}
   return null;
 }
 async function playSong(i){
