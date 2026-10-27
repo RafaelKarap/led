@@ -266,6 +266,7 @@ function connect(){
     if(m.type==='auth_required')ws.send(JSON.stringify({type:'auth',access_token:token}));
     else if(m.type==='auth_invalid'){clearTimeout(S.cto);ws.onclose=null;ws.close();S.live=false;setStatus('error','Το token δεν έγινε δεκτό από το Home Assistant. Φτιάξε νέο και βάλ’ το στις Ρυθμίσεις.')}
     else if(m.type==='auth_ok')boot();
+    else if(m.type==='pong'&&reqs[m.id]){reqs[m.id].res('pong');delete reqs[m.id]}
     else if(m.type==='result'&&reqs[m.id]){m.success?reqs[m.id].res(m.result):reqs[m.id].rej(m.error);delete reqs[m.id]}
     else if(m.type==='event'&&m.event&&m.event.event_type==='state_changed'){const d=m.event.data;if(d.new_state)S.st.set(d.entity_id,d.new_state);else S.st.delete(d.entity_id);schedule()}
   };
@@ -283,11 +284,17 @@ async function boot(){
     clearTimeout(S.cto);S.live=true;S.cached=false;S.retryN=0;setStatus('ok');render();saveSnap();setTimeout(applyPendingOff,500);
   }catch(e){setStatus('error','Συνδέθηκε, αλλά δεν διαβάστηκαν οι συσκευές.')}
 }
+function withTimeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))])}
+function forceReconnect(){if(S.ws){S.ws.onclose=null;try{S.ws.close()}catch(e){}}S.live=false;S.cached=S.st.size>0;setStatus('connecting');render();clearTimeout(S.retry);connect()}
+async function healthCheck(){
+  if(!S.live||!S.ws)return;
+  try{await withTimeout(S.send({type:'ping'}),2500)}catch(e){forceReconnect()}
+}
 function schedule(){clearTimeout(S.snapT);S.snapT=setTimeout(saveSnap,5000);if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
 async function call(dom,svc,id,data={}){
   if(!S.live){toast(S.cached?'Περίμενε λίγο, συνδέεται με το σπίτι…':'Δεν υπάρχει σύνδεση με το σπίτι');return}
-  try{await S.send({type:'call_service',domain:dom,service:svc,service_data:data,target:{entity_id:id}})}
-  catch(e){toast('Η εντολή δεν εκτελέστηκε'+(e&&e.message?': '+e.message:''))}
+  try{await withTimeout(S.send({type:'call_service',domain:dom,service:svc,service_data:data,target:{entity_id:id}}),6000)}
+  catch(e){if(e&&e.code==='timeout'){toast('Το σπίτι δεν απάντησε, ξανασυνδέομαι. Δοκίμασε ξανά σε λίγο.');forceReconnect()}else toast('Η εντολή δεν εκτελέστηκε'+(e&&e.message?': '+e.message:''))}
 }
 
 function cleanName(n){const w=String(n).trim().split(/\s+/);const k=w.length/2;if(w.length%2===0&&w.slice(0,k).join(' ').toLowerCase()===w.slice(k).join(' ').toLowerCase())return w.slice(0,k).join(' ');return n}
@@ -802,7 +809,8 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
   if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
 })();
 ledAuto();
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ledAuto();applyPendingLed();if(S.cfg.token&&!S.live)connect()}});
+setInterval(()=>{if(document.visibilityState==='visible')healthCheck()},15000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){S.hiddenAt=Date.now();return}if(document.visibilityState==='visible'){if(S.hiddenAt&&Date.now()-S.hiddenAt>2000)healthCheck();ledAuto();applyPendingLed();if(S.cfg.token&&!S.live)connect()}});
 setInterval(()=>{if(document.visibilityState==='visible'&&[...S.strips.values()].some(s=>s.state!=='ready'))ledAuto()},20000);
 </script>
 </body>
