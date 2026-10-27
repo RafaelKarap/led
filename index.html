@@ -381,7 +381,7 @@ async function runMode(id){
     openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
     const music=playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);
     toast('❤️ Elena mode…');
-    await new Promise(r=>setTimeout(r,3000));
+    await new Promise(r=>setTimeout(r,5000));
     const plan=modePlan('elena');plan.forEach(offAction);
     let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}
     const err=await music;
