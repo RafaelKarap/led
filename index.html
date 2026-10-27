@@ -212,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=26;
+const APP_VERSION=27;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -691,7 +691,7 @@ const SVC='0000fff0-0000-1000-8000-00805f9b34fb',CHR='0000fff3-0000-1000-8000-00
 const F={power:on=>on?[0x7e,4,4,1,0,1,0xff,0,0xef]:[0x7e,4,4,0,0,0,0xff,0,0xef],color:h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));return[0x7e,7,5,3,r,g,b,0x10,0xef]},bright:v=>[0x7e,4,1,v,0xff,0xff,0xff,0,0xef],effect:id=>[0x7e,5,3,id,6,0xff,0xff,0,0xef]};
 let ledSaved=store.get('led.strips',{});
 function ledPersist(s){ledSaved[s.id]={name:s.name,on:s.on,color:s.color,bri:s.bri,effect:s.effect,speed:s.speed??50};store.set('led.strips',ledSaved)}
-function ledMsg(e){if(e&&e.name==='NetworkError')return 'Δεν έγινε σύνδεση. Κλείσε την εφαρμογή duoCo και ξαναδοκίμασε.';if(e&&e.name==='NotFoundError')return 'Η ταινία δεν βρέθηκε. Είσαι κοντά της;';return 'Bluetooth: '+(e&&e.message||e)}
+function ledMsg(e){if(e&&e.name==='NetworkError')return 'Η ταινία δεν απάντησε. Έλεγξε ότι έχει ρεύμα, ότι η εφαρμογή δεν είναι ανοιχτή και σε καρτέλα του Chrome, ή κλείσε-άνοιξε το Bluetooth.';if(e&&e.name==='NotFoundError')return 'Η ταινία δεν βρέθηκε. Είσαι κοντά της;';return 'Bluetooth: '+(e&&e.message||e)}
 async function ledAdd(all){
   try{
     const dev=await navigator.bluetooth.requestDevice(all?{acceptAllDevices:true,optionalServices:[SVC]}:{filters:[{namePrefix:'MELK'},{namePrefix:'ELK'},{namePrefix:'OA21'},{services:[SVC]}],optionalServices:[SVC]});
@@ -709,7 +709,9 @@ function ledAttach(dev){
 }
 async function ledConnect(s,quiet){
   if(s.state==='ready'||s.busy)return;s.busy=true;s.state='connecting';render();
-  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();if(!quiet)toast('Συνδέθηκε: '+s.name);applyPendingLed()}
+  const once=async()=>{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR)};
+  try{try{await once()}catch(e1){try{s.dev.gatt.disconnect()}catch(x){}await new Promise(r=>setTimeout(r,1200));await once()}
+    s.state='ready';render();if(!quiet)toast('Συνδέθηκε: '+s.name);applyPendingLed()}
   catch(e){s.char=null;s.state='lost';render();if(!quiet)toast(ledMsg(e))}
   finally{s.busy=false}
 }
