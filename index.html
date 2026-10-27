@@ -233,8 +233,24 @@ function applyTheme(){
   document.documentElement.dataset.theme=t;
   document.querySelector('meta[name="theme-color"]').content={night:'#151b22',day:'#eef1f4',fantasy:'#e9dab5'}[t];
 }
-function setStatus(kind,msg){const el=$('#status');if(kind==='ok'){el.hidden=true;return}el.hidden=false;$('#statusText').textContent=kind==='connecting'?'Σύνδεση με το σπίτι…':msg}
+function setStatus(kind,msg){const el=$('#status');if(kind==='ok'){el.hidden=true;return}el.hidden=false;$('#statusText').textContent=kind==='connecting'?(S.cached?'Συγχρονισμός με το σπίτι…':'Σύνδεση με το σπίτι…'):msg}
 
+function snapKeep(id,s){const d=id.split('.')[0];if(DOMS.includes(d)||d==='scene'||d==='script')return true;if(d==='sensor'){if(s.attributes&&s.attributes.device_class==='battery')return true;return /machine_state$|job_state$|completion_time$/.test(id)}return false}
+function saveSnap(){
+  if(!S.live)return;
+  const st=[...S.st.values()].filter(s=>snapKeep(s.entity_id,s));
+  const ids=new Set(st.map(s=>s.entity_id));
+  const reg=[...S.reg.values()].filter(r=>ids.has(r.entity_id));
+  const devs=new Set(reg.map(r=>r.device_id).filter(Boolean));
+  const snap={t:Date.now(),st,reg,areas:[...S.areas],dev:[...S.dev.values()].filter(d=>devs.has(d.id))};
+  try{localStorage.setItem('home.snap',JSON.stringify(snap))}catch(e){}idb.set('home.snap',snap);
+}
+async function loadSnap(){
+  let snap=store.get('home.snap',null);if(!snap)snap=await idb.get('home.snap');
+  if(!snap||S.live)return;
+  S.st=new Map(snap.st.map(s=>[s.entity_id,s]));S.reg=new Map(snap.reg.map(r=>[r.entity_id,r]));
+  S.areas=new Map(snap.areas);S.dev=new Map(snap.dev.map(d=>[d.id,d]));S.cached=true;render();
+}
 function connect(){
   const {url,token}=S.cfg;
   if(!url||!token){setStatus('error','Λείπει το token του Home Assistant.');return}
@@ -242,7 +258,7 @@ function connect(){
   setStatus('connecting');
   let ws;try{ws=new WebSocket(url.replace(/\/+$/,'').replace(/^http/i,'ws')+'/api/websocket')}catch(e){setStatus('error','Η διεύθυνση δεν είναι σωστή.');return}
   S.ws=ws;let n=1;const reqs={};
-  clearTimeout(S.cto);S.cto=setTimeout(()=>{if(!S.live&&S.ws===ws){ws.onclose=null;try{ws.close()}catch(e){}setStatus('error','Το σπίτι δεν απαντά. Έλεγξε ότι το Tailscale είναι ανοιχτό και ότι το laptop και το Home Assistant τρέχουν.');clearTimeout(S.retry);S.retry=setTimeout(connect,10000)}},10000);
+  clearTimeout(S.cto);S.cto=setTimeout(()=>{if(!S.live&&S.ws===ws){ws.onclose=null;try{ws.close()}catch(e){}S.retryN=(S.retryN||0)+1;setStatus(S.retryN>1?'error':'connecting','Το σπίτι δεν απαντά. Έλεγξε ότι το Tailscale είναι ανοιχτό και ότι το laptop και το Home Assistant τρέχουν.');clearTimeout(S.retry);S.retry=setTimeout(connect,2000)}},8000);
   S.send=m=>new Promise((res,rej)=>{const id=n++;reqs[id]={res,rej};ws.send(JSON.stringify({...m,id}))});
   ws.onmessage=e=>{
     const m=JSON.parse(e.data);
@@ -252,7 +268,7 @@ function connect(){
     else if(m.type==='result'&&reqs[m.id]){m.success?reqs[m.id].res(m.result):reqs[m.id].rej(m.error);delete reqs[m.id]}
     else if(m.type==='event'&&m.event&&m.event.event_type==='state_changed'){const d=m.event.data;if(d.new_state)S.st.set(d.entity_id,d.new_state);else S.st.delete(d.entity_id);schedule()}
   };
-  ws.onclose=()=>{clearTimeout(S.cto);S.live=false;setStatus('error','Δεν υπάρχει σύνδεση με το σπίτι. Έλεγξε το Tailscale και ότι το laptop είναι ανοιχτό.');render();clearTimeout(S.retry);S.retry=setTimeout(connect,6000)};
+  ws.onclose=()=>{clearTimeout(S.cto);const was=S.live;S.live=false;S.cached=S.st.size>0;S.retryN=(S.retryN||0)+1;setStatus(S.retryN>2?'error':'connecting','Δεν υπάρχει σύνδεση με το σπίτι. Έλεγξε το Tailscale και ότι το laptop είναι ανοιχτό.');render();clearTimeout(S.retry);S.retry=setTimeout(connect,was||S.retryN<3?1500:6000)};
 }
 async function boot(){
   try{
@@ -263,12 +279,12 @@ async function boot(){
     S.reg=new Map(en.status==='fulfilled'?en.value.map(r=>[r.entity_id,r]):[]);
     S.dev=new Map(dv.status==='fulfilled'?dv.value.map(d=>[d.id,d]):[]);
     await S.send({type:'subscribe_events',event_type:'state_changed'});
-    clearTimeout(S.cto);S.live=true;setStatus('ok');render();toast('Συνδέθηκε με το σπίτι');
+    clearTimeout(S.cto);S.live=true;S.cached=false;S.retryN=0;setStatus('ok');render();saveSnap();
   }catch(e){setStatus('error','Συνδέθηκε, αλλά δεν διαβάστηκαν οι συσκευές.')}
 }
-function schedule(){if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
+function schedule(){clearTimeout(S.snapT);S.snapT=setTimeout(saveSnap,5000);if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
 async function call(dom,svc,id,data={}){
-  if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');return}
+  if(!S.live){toast(S.cached?'Περίμενε λίγο, συνδέεται με το σπίτι…':'Δεν υπάρχει σύνδεση με το σπίτι');return}
   try{await S.send({type:'call_service',domain:dom,service:svc,service_data:data,target:{entity_id:id}})}
   catch(e){toast('Η εντολή δεν εκτελέστηκε'+(e&&e.message?': '+e.message:''))}
 }
@@ -281,7 +297,7 @@ function sameDev(devId,re){for(const [id,r] of S.reg){if(r.device_id===devId&&re
 function devBattery(id){const r=S.reg.get(id);if(!r||!r.device_id)return null;for(const [eid,rr] of S.reg){if(rr.device_id===r.device_id&&eid.startsWith('sensor.')){const s=S.st.get(eid);if(s&&s.attributes.device_class==='battery')return s.state}}return null}
 function cards(){
   const out=[],washers=new Set();
-  if(S.live){
+  if(S.live||S.cached){
     for(const [id] of S.st){
       const r=S.reg.get(id);if(hidden(r))continue;
       if(/^sensor\..*machine_state$/.test(id)&&r&&r.device_id&&!washers.has(r.device_id)){
@@ -754,6 +770,7 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(
 render();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 (async()=>{
+  await loadSnap();
   if(!S.cfg.token){const b=await idb.get('home.cfg');if(b&&b.token){S.cfg=Object.assign({url:DEFAULT_URL},b);store.set('home.cfg',S.cfg)}}
   else idb.set('home.cfg',S.cfg);
   if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
