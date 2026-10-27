@@ -417,6 +417,14 @@ function modePlan(id){
   if(id==='elena')return cs.filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name));
   return [];
 }
+async function applyPendingLed(){
+  const p=S.pendingLed;if(!p)return;
+  if(Date.now()>p.until){S.pendingLed=null;return}
+  if(Date.now()<p.at)return;
+  const R=[...S.strips.values()].filter(s=>s.state==='ready');if(!R.length)return;
+  for(const s of R){s.on=true;await ledSend(s,F.power(true));await ledColor(s,p.color)}
+  if(R.length>=S.strips.size)S.pendingLed=null;
+}
 function openSpotifyApp(uri){
   if(!S.spOpen||!/android/i.test(navigator.userAgent))return;
   const ent=spEntity(),src=S.spSource||'';
@@ -425,14 +433,21 @@ function openSpotifyApp(uri){
 }
 async function runMode(id){
   if(id==='elena'){
-    openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
-    const music=playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',S.elenaSeek);
-    toast('❤️ Elena mode…');
-    await new Promise(r=>setTimeout(r,S.elenaDelay*1000));
-    const plan=modePlan('elena');plan.forEach(offAction);
-    let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}
-    const err=await music;
-    toast(`Elena mode: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)'}${err?` · μουσική: ${err}`:', 🎵 παίζει'}`);
+    const uri='spotify:track:3pepZAOvUCBt3qWi9Ax6Aq';
+    openSpotifyApp(uri);
+    if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');}
+    const ent=spEntity(),d=S.elenaDelay;
+    if(S.live&&ent){
+      const t={entity_id:ent},seq=[];
+      if(S.spSource)seq.push({action:'media_player.select_source',target:t,data:{source:S.spSource},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
+      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true},{delay:{seconds:3}},{action:'media_player.media_seek',target:t,data:{seek_position:S.elenaSeek},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
+      S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
+    }
+    const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
+    if(S.live&&central.length)S.send({type:'execute_script',sequence:[{delay:{seconds:d}},{action:'homeassistant.turn_off',target:{entity_id:central},continue_on_error:true}]}).catch(e=>toast('Φώτα: '+(e&&e.message||'σφάλμα')));
+    S.pendingLed={at:Date.now()+d*1000,color:'#ff0000',until:Date.now()+d*1000+120000};
+    setTimeout(applyPendingLed,d*1000+50);
+    toast('❤️ Elena mode');
     closeSheet();render();return;
   }
   const plan=modePlan(id);plan.forEach(offAction);
@@ -672,7 +687,7 @@ function ledAttach(dev){
 }
 async function ledConnect(s,quiet){
   if(s.state==='ready'||s.busy)return;s.busy=true;s.state='connecting';render();
-  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();if(!quiet)toast('Συνδέθηκε: '+s.name)}
+  try{const srv=await s.dev.gatt.connect();const sv=await srv.getPrimaryService(SVC);s.char=await sv.getCharacteristic(CHR);s.state='ready';render();if(!quiet)toast('Συνδέθηκε: '+s.name);applyPendingLed()}
   catch(e){s.char=null;s.state='lost';render();if(!quiet)toast(ledMsg(e))}
   finally{s.busy=false}
 }
@@ -776,7 +791,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
   if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
 })();
 ledAuto();
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ledAuto();if(S.cfg.token&&!S.live)connect()}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ledAuto();applyPendingLed();if(S.cfg.token&&!S.live)connect()}});
 setInterval(()=>{if(document.visibilityState==='visible'&&[...S.strips.values()].some(s=>s.state!=='ready'))ledAuto()},20000);
 </script>
 </body>
