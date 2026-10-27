@@ -147,6 +147,7 @@ input[type=range]{width:100%;height:40px;accent-color:var(--accent)}
 .mode svg{width:18px;height:18px;color:var(--accent)}
 .mode.exit{background:#b8432c;border-color:#b8432c;color:#fff}
 .mode.exit svg{color:#fff}
+body.offline .mode:not(.exit),body.offline .mcard:not(.exit){opacity:.55}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
 .mcard{display:flex;flex-direction:column;gap:8px;text-align:left;padding:16px;min-height:130px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--card-border);box-shadow:var(--card-shadow)}
 .mcard svg{width:26px;height:26px;color:var(--accent)}
@@ -233,7 +234,7 @@ function applyTheme(){
   document.documentElement.dataset.theme=t;
   document.querySelector('meta[name="theme-color"]').content={night:'#151b22',day:'#eef1f4',fantasy:'#e9dab5'}[t];
 }
-function setStatus(kind,msg){const el=$('#status');if(kind==='ok'){el.hidden=true;return}el.hidden=false;$('#statusText').textContent=kind==='connecting'?(S.cached?'Συγχρονισμός με το σπίτι…':'Σύνδεση με το σπίτι…'):msg}
+function setStatus(kind,msg){document.body.classList.toggle('offline',kind!=='ok');const el=$('#status');if(kind==='ok'){el.hidden=true;return}el.hidden=false;$('#statusText').textContent=kind==='connecting'?(S.cached?'Συγχρονισμός με το σπίτι…':'Σύνδεση με το σπίτι…'):msg}
 
 function snapKeep(id,s){const d=id.split('.')[0];if(DOMS.includes(d)||d==='scene'||d==='script')return true;if(d==='sensor'){if(s.attributes&&s.attributes.device_class==='battery')return true;return /machine_state$|job_state$|completion_time$/.test(id)}return false}
 function saveSnap(){
@@ -279,7 +280,7 @@ async function boot(){
     S.reg=new Map(en.status==='fulfilled'?en.value.map(r=>[r.entity_id,r]):[]);
     S.dev=new Map(dv.status==='fulfilled'?dv.value.map(d=>[d.id,d]):[]);
     await S.send({type:'subscribe_events',event_type:'state_changed'});
-    clearTimeout(S.cto);S.live=true;S.cached=false;S.retryN=0;setStatus('ok');render();saveSnap();
+    clearTimeout(S.cto);S.live=true;S.cached=false;S.retryN=0;setStatus('ok');render();saveSnap();setTimeout(applyPendingOff,500);
   }catch(e){setStatus('error','Συνδέθηκε, αλλά δεν διαβάστηκαν οι συσκευές.')}
 }
 function schedule(){clearTimeout(S.snapT);S.snapT=setTimeout(saveSnap,5000);if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
@@ -417,6 +418,14 @@ function modePlan(id){
   if(id==='elena')return cs.filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name));
   return [];
 }
+function applyPendingOff(){
+  const p=S.pendingOff;if(!p||!S.live)return;
+  if(Date.now()>p.until){S.pendingOff=null;return}
+  if(Date.now()<p.at)return;
+  const still=p.ids.filter(id=>S.st.get(id)?.state==='on');
+  if(still.length)call('homeassistant','turn_off',still);
+  S.pendingOff=null;
+}
 async function applyPendingLed(){
   const p=S.pendingLed;if(!p)return;
   if(Date.now()>p.until){S.pendingLed=null;return}
@@ -446,6 +455,7 @@ async function runMode(id){
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
     if(S.live&&central.length)S.send({type:'execute_script',sequence:[{delay:{seconds:d}},{action:'homeassistant.turn_off',target:{entity_id:central},continue_on_error:true}]}).catch(e=>toast('Φώτα: '+(e&&e.message||'σφάλμα')));
     S.pendingLed={at:Date.now()+d*1000,color:'#ff0000',until:Date.now()+d*1000+120000};
+    S.pendingOff={at:Date.now()+d*1000+1500,ids:central,until:Date.now()+d*1000+120000};
     setTimeout(applyPendingLed,d*1000+50);
     toast('❤️ Elena mode');
     closeSheet();render();return;
@@ -716,7 +726,8 @@ function ledColor(s,h){s.color=h;s.on=true;ledPersist(s);render();return ledSend
 document.addEventListener('click',async e=>{
   const sc=e.target.closest('[data-scene]');if(sc){const id=sc.dataset.scene;call(id.split('.')[0],'turn_on',id);toast('Ενεργοποιήθηκε: '+sc.textContent.trim());return}
   const nv=e.target.closest('[data-nav]');if(nv){if(nv.dataset.nav==='settings'){openSettings();return}S.view=nv.dataset.nav;window.scrollTo(0,0);render();return}
-  const md=e.target.closest('[data-mode]');if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
+  const md=e.target.closest('[data-mode]');if(md&&!S.live&&md.dataset.mode!=='exit'){toast('Περίμενε 1–2″ να συνδεθεί με το σπίτι και ξαναπάτα');return}
+  if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
   const rmode=e.target.closest('[data-runmode]');if(rmode){runMode(rmode.dataset.runmode);return}
   if(e.target.id==='exitClean'){S.modeClean=e.target.checked;return}
   if(e.target.id==='spOpenChk'){S.spOpen=e.target.checked;store.set('home.spOpen',S.spOpen);return}
