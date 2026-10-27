@@ -236,6 +236,7 @@ async function call(dom,svc,id,data={}){
   catch(e){toast('Η εντολή δεν εκτελέστηκε'+(e&&e.message?': '+e.message:''))}
 }
 
+function cleanName(n){const w=String(n).trim().split(/\s+/);const k=w.length/2;if(w.length%2===0&&w.slice(0,k).join(' ').toLowerCase()===w.slice(k).join(' ').toLowerCase())return w.slice(0,k).join(' ');return n}
 function hidden(r){return r&&(r.hidden_by||r.disabled_by||r.entity_category)}
 function areaOf(id){const r=S.reg.get(id);if(!r)return null;return r.area_id||(S.dev.get(r.device_id)||{}).area_id||null}
 function areaName(a){if(!a)return 'Άλλα';const n=S.areas.get(a)||a;return AREA_GR[n.toLowerCase()]||n}
@@ -255,7 +256,7 @@ function cards(){
       const dom=id.split('.')[0];if(!DOMS.includes(dom))continue;
       const r=S.reg.get(id);if(hidden(r))continue;
       if(r&&r.device_id&&washers.has(r.device_id))continue;
-      out.push({kind:dom,id,area:areaName(areaOf(id)),name:s.attributes.friendly_name||id});
+      out.push({kind:dom,id,area:areaName(areaOf(id)),name:cleanName(s.attributes.friendly_name||id)});
     }
   }
   if(S.ledGroup&&S.strips.size>1)out.push({kind:'ledgrp',id:'ledgrp',area:'Σαλόνι',name:'Ταινίες LED'});
@@ -396,7 +397,7 @@ function openSheet(c){S.sheet={kind:'card',id:c.id};renderSheet();const g=$('#dl
 function openSettings(){S.sheet={kind:'settings'};renderSettings();const g=$('#dlg');if(!g.open)g.showModal()}
 function closeSheet(){S.sheet=null;const g=$('#dlg');if(g.open)g.close()}
 function renderSheet(){
-  if(!S.sheet)return;if(S.sheet.kind==='settings')return renderSettings();if(S.sheet.kind==='mode')return renderModeSheet();
+  if(!S.sheet)return;if(S.sheet.kind==='settings')return renderSettings();if(S.sheet.kind==='ledmore')return renderLedMore();if(S.sheet.kind==='mode')return renderModeSheet();
   const c=findCard(S.sheet.id);if(!c){closeSheet();return}
   const sh=$('#sheet');let body='';
   if(isLed(c)){
@@ -436,6 +437,12 @@ function renderSheet(){
   }
   sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">${esc(c.area)}, ${esc(stateText(c))}</p>${body}`;
 }
+function renderLedMore(){
+  $('#sheet').innerHTML=`<div class="grab"></div><h3>Προστέθηκε: ${esc(S.sheet.name)}</h3>
+  <p class="sub">Έχεις ${S.strips.size} ${S.strips.size===1?'ταινία':'ταινίες'}. Ο Chrome επιτρέπει μία ταινία κάθε φορά, οπότε πάτα για την επόμενη.</p>
+  <button class="power" id="addStrip">Προσθήκη επόμενης</button>
+  <button class="secondary" data-close="1">Τέλος</button>`;
+}
 function renderSettings(){
   const c=S.cfg,bt=!!navigator.bluetooth;
   const th=[['night','Νύχτα'],['day','Μέρα'],['fantasy','Fantasy'],['auto','Αυτόματο']];
@@ -461,7 +468,9 @@ function ledMsg(e){if(e&&e.name==='NetworkError')return 'Δεν έγινε σύ�
 async function ledAdd(all){
   try{
     const dev=await navigator.bluetooth.requestDevice(all?{acceptAllDevices:true,optionalServices:[SVC]}:{filters:[{namePrefix:'MELK'},{namePrefix:'ELK'},{namePrefix:'OA21'},{services:[SVC]}],optionalServices:[SVC]});
-    const s=ledAttach(dev);ledPersist(s);renderSettings();render();await ledConnect(s);
+    const s=ledAttach(dev);ledPersist(s);render();
+    S.sheet={kind:'ledmore',name:s.name};renderLedMore();const g=$('#dlg');if(!g.open)g.showModal();
+    await ledConnect(s);if(S.sheet&&S.sheet.kind==='ledmore')renderLedMore();
   }catch(e){if(e.name!=='NotFoundError')toast(ledMsg(e))}
 }
 function ledAttach(dev){
@@ -490,6 +499,7 @@ document.addEventListener('click',async e=>{
   const rm=e.target.closest('[data-room]');if(rm){S.room=rm.dataset.room;render();return}
   const th=e.target.closest('[data-theme]');if(th&&th.tagName==='BUTTON'){S.theme=th.dataset.theme;store.set('home.theme',S.theme);applyTheme();renderSettings();return}
   if(e.target.closest('#settingsBtn')||e.target.closest('#statusBtn')){openSettings();return}
+  if(e.target.closest('[data-close]')){closeSheet();render();return}
   if(e.target.id==='addStrip')return ledAdd(false);
   if(e.target.id==='addStripAll')return ledAdd(true);
   const rs=e.target.closest('[data-rmstrip]');if(rs){const s=S.strips.get(rs.dataset.rmstrip);if(s){if(s.dev.gatt.connected)s.dev.gatt.disconnect();S.strips.delete(s.id);delete ledSaved[s.id];store.set('led.strips',ledSaved);if(s.dev.forget)try{await s.dev.forget()}catch(x){}}renderSettings();render();return}
