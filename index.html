@@ -464,16 +464,19 @@ function toUri(link){const m=String(link).match(/open\.spotify\.com\/(?:intl-[a-
 async function playUri(uri,seek){
   if(!S.live)return 'Δεν υπάρχει σύνδεση με το σπίτι';
   const ent=spEntity();if(!ent)return 'Δεν βρέθηκε το Spotify στο Home Assistant';
-  if(S.spSource)await call('media_player','select_source',ent,{source:S.spSource});
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const cur=S.st.get(ent)?.attributes.source;
+  if(S.spSource&&cur!==S.spSource){await call('media_player','select_source',ent,{source:S.spSource});await wait(2000)}
   await call('media_player','play_media',ent,{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'});
-  if(seek){setTimeout(()=>call('media_player','media_seek',ent,{seek_position:seek}),2500)}
+  if(seek){await wait(3000);await call('media_player','media_seek',ent,{seek_position:seek});await wait(1500);if(S.st.get(ent)?.state!=='playing')await call('media_player','media_play',ent)}
   return null;
 }
 async function playSong(i){
   const song=S.songs[i];if(!song)return;
   if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');return}
   const ent=spEntity();if(!ent){toast('Δεν βρέθηκε το Spotify στο Home Assistant');return}
-  if(S.spSource)await call('media_player','select_source',ent,{source:S.spSource});
+  const cur=S.st.get(ent)?.attributes.source;
+  if(S.spSource&&cur!==S.spSource){await call('media_player','select_source',ent,{source:S.spSource});await new Promise(r=>setTimeout(r,2000))}
   const type=song.uri.split(':')[1]==='track'?'music':'playlist';
   await call('media_player','play_media',ent,{media_content_id:song.uri,media_content_type:type});
   toast('🎵 '+song.name);
