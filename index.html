@@ -191,7 +191,7 @@ const BUILTIN=[
 {id:'movie',name:'Ταινία',icon:'screen',desc:'Σβήνει τα φώτα και ανάβει τις ταινίες μωβ, χαμηλά.'},
 {id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως, κάνει τις ταινίες κόκκινες και παίζει το τραγούδι από το 0:48.'},
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'}];
-const S={songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const S={spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 const idb={open(){return new Promise((res,rej)=>{const r=indexedDB.open('spiti',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
   async get(k){try{const db=await idb.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
@@ -370,7 +370,14 @@ function modePlan(id){
   if(id==='elena')return cs.filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name));
   return [];
 }
+function openSpotifyApp(uri){
+  if(!S.spOpen||!/android/i.test(navigator.userAgent))return;
+  const ent=spEntity(),src=S.spSource||'';
+  if(/web player|chrome|pc|desktop|laptop/i.test(src))return;
+  const a=document.createElement('a');a.href=uri;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+}
 async function runMode(id){
+  if(id==='elena')openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
   const plan=modePlan(id);plan.forEach(offAction);
   let extra='';
   if(id==='movie'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=40;await ledSend(s,F.power(true));await ledColor(s,'#b46bff');await ledSend(s,F.bright(40));n++}if(!n)extra=' (οι ταινίες δεν είναι συνδεδεμένες)'}
@@ -493,6 +500,7 @@ async function playUri(uri,seek){
 }
 async function playSong(i){
   const song=S.songs[i];if(!song)return;
+  openSpotifyApp(song.uri);
   toast('🎵 Ξεκινάει: '+song.name);
   const err=await playUri(song.uri,0);
   toast(err?'Μουσική: '+err:'🎵 '+song.name);
@@ -519,6 +527,7 @@ function renderSettings(){
   <label class="field"><span>Link από το Spotify (Κοινοποίηση → Αντιγραφή συνδέσμου)</span><input id="songLink" inputmode="url" placeholder="https://open.spotify.com/track/..."></label>
   <button class="secondary" id="addSong">Προσθήκη τραγουδιού</button>
   <label class="field"><span>Πού να παίζει</span>${(()=>{const e=spEntity(),l=e?(S.st.get(e).attributes.source_list||[]):[];return l.length?`<div class="row" style="justify-content:flex-start">${l.map(x=>`<button class="pill" data-spsrc="${esc(x)}" aria-pressed="${S.spSource===x}">${esc(x)}</button>`).join('')}</div>`:`<input id="spSrc" placeholder="Όνομα συσκευής Spotify, π.χ. το κινητό σου" value="${esc(S.spSource)}">`})()}</label>
+  <label class="chk"><input type="checkbox" id="spOpenChk" ${S.spOpen?'checked':''}><span>Άνοιγε το Spotify στο κινητό πριν παίξει (χρειάζεται όταν παίζει στο κινητό)</span></label>
   <p class="help">Άνοιξε το Spotify στο κινητό τουλάχιστον μία φορά πρόσφατα, για να εμφανίζεται ως συσκευή. Αν είναι συνδεδεμένο σε Bluetooth ηχείο, η μουσική παίζει εκεί.</p></div>
   <div class="sect"><h4>Ταινίες LED (Bluetooth)</h4>
   ${bt?`<div class="list">${[...S.strips.values()].map(s=>`<div class="it">${svg('led').replace('<svg','<svg width="20" height="20"')}<span>${esc(s.name)}</span><button data-rmstrip="${esc(s.id)}">Αφαίρεση</button></div>`).join('')||'<p class="help">Δεν έχουν προστεθεί ταινίες.</p>'}</div>
@@ -582,6 +591,7 @@ document.addEventListener('click',async e=>{
   const md=e.target.closest('[data-mode]');if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
   const rmode=e.target.closest('[data-runmode]');if(rmode){runMode(rmode.dataset.runmode);return}
   if(e.target.id==='exitClean'){S.modeClean=e.target.checked;return}
+  if(e.target.id==='spOpenChk'){S.spOpen=e.target.checked;store.set('home.spOpen',S.spOpen);return}
   const sg=e.target.closest('[data-song]');if(sg){playSong(+sg.dataset.song);return}
   const rs2=e.target.closest('[data-rmsong]');if(rs2){S.songs.splice(+rs2.dataset.rmsong,1);store.set('home.songs',S.songs);renderSettings();render();return}
   const ss=e.target.closest('[data-spsrc]');if(ss){S.spSource=ss.dataset.spsrc;store.set('home.spSource',S.spSource);renderSettings();return}
