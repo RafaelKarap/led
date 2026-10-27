@@ -161,6 +161,7 @@ body.offline .mode:not(.exit),body.offline .mcard:not(.exit){opacity:.55}
 .chk input{width:22px;height:22px;accent-color:var(--accent)}
 .offlist{margin:8px 0 0;padding-left:18px;color:var(--muted)}
 .danger{width:100%;margin-top:18px;border:0;border-radius:16px;padding:15px;font-weight:700;background:#b8432c;color:#fff}
+.upd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;border:0;border-radius:14px;padding:12px 18px;background:var(--light);color:#2B1F04;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.35);max-width:92vw}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--pill);color:var(--pill-ink);padding:11px 18px;border-radius:14px;font-size:.92em;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -190,6 +191,7 @@ body.offline .mode:not(.exit),body.offline .mcard:not(.exit){opacity:.55}
   <button data-nav="settings"><span data-ic="gear"></span>Ρυθμίσεις</button>
 </div></nav>
 <dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+<button class="upd" id="upd" hidden>Υπάρχει νέα έκδοση, πάτα για ανανέωση</button>
 <div class="toast" id="toast" role="status"></div>
 <script>
 const I={
@@ -210,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=25;
+const APP_VERSION=26;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -800,6 +802,16 @@ document.addEventListener('change',e=>{if(e.target.id==='spSrc'){S.spSource=e.ta
 $('#dlg').addEventListener('close',()=>{S.sheet=null});
 $('#settingsBtn').innerHTML=svg('gear');
 $('#ver').textContent='v'+APP_VERSION;
+async function checkUpdate(){
+  try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});const j=await r.json();if(j.v>APP_VERSION){$('#upd').hidden=false}}catch(e){}
+}
+$('#upd').addEventListener('click',async()=>{
+  $('#upd').textContent='Ανανέωση…';
+  try{const rs=await navigator.serviceWorker?.getRegistrations?.();for(const r of rs||[])await r.unregister();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
+  location.replace(location.pathname+'?v='+Date.now());
+});
+checkUpdate();setInterval(()=>{if(document.visibilityState==='visible')checkUpdate()},60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
 document.querySelectorAll('[data-ic]').forEach(el=>el.outerHTML=svg(el.dataset.ic));
 
 applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
