@@ -172,7 +172,7 @@ scene:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
 gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
 dots:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
 up:'<path d="M12 5v14M5 12h14"/>',down:'<path d="M5 12h14"/>',
-play:'<path d="M7 4v16l13-8z"/>',door:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',heart:'<path d="M12 21s-7-4.5-9.3-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.3 6c-2.3 4.5-9.3 9-9.3 9z"/>',mode:'<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
+play:'<path d="M7 4v16l13-8z"/>',door:'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',screen:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',work:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',heart:'<path d="M12 21s-7-4.5-9.3-9A5.3 5.3 0 0 1 12 6a5.3 5.3 0 0 1 9.3 6c-2.3 4.5-9.3 9-9.3 9z"/>',mode:'<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/>',pause:'<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',home:'<path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'
 };
 const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||I.switch}</svg>`;
 const $=s=>document.querySelector(s);
@@ -189,7 +189,8 @@ const BUILTIN=[
 {id:'exit',name:'Έξοδος',icon:'door',desc:'Κλείνει όλα τα φώτα, τις ταινίες και τα κλιματιστικά.'},
 {id:'night',name:'Καληνύχτα',icon:'moon',desc:'Σβήνει φώτα και ταινίες. Κλείνει τα κλιματιστικά εκτός από του υπνοδωματίου.'},
 {id:'movie',name:'Ταινία',icon:'screen',desc:'Σβήνει τα φώτα και ανάβει τις ταινίες μωβ, χαμηλά.'},
-{id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως και κάνει τις ταινίες κόκκινες.'}];
+{id:'elena',name:'Elena mode',icon:'heart',desc:'Σβήνει το Κεντρικό Φως και κάνει τις ταινίες κόκκινες.'},
+{id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'}];
 const S={ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
@@ -363,6 +364,13 @@ async function runMode(id){
   const plan=modePlan(id);plan.forEach(offAction);
   let extra='';
   if(id==='movie'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=40;await ledSend(s,F.power(true));await ledColor(s,'#b46bff');await ledSend(s,F.bright(40));n++}if(!n)extra=' (οι ταινίες δεν είναι συνδεδεμένες)'}
+  if(id==='work'){
+    const lights=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name));
+    lights.forEach(c=>{if(!isOn(c))call(c.kind,'turn_on',c.id)});
+    let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=100;await ledSend(s,F.power(true));await ledColor(s,'#1e90ff');await ledSend(s,F.bright(100));ledPersist(s);n++}
+    toast(`Work mode: ${lights.length?'το Κεντρικό Φως άναψε':'δεν βρέθηκε Κεντρικό Φως'}${n?', οι ταινίες έγιναν μπλε':' (οι ταινίες δεν είναι συνδεδεμένες)'}`);
+    closeSheet();render();return;
+  }
   if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)'}
   if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
   const m=BUILTIN.find(x=>x.id===id);
