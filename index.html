@@ -479,7 +479,9 @@ async function runMode(id){
       {delay:{seconds:7}},
       {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true},
       {delay:{seconds:4}},
-      {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')))}
+      {action:'webostv.command',target:t,data:{command:'system.launcher/close',payload:{id:'youtube.leanback.v4'}},continue_on_error:true},
+      {delay:{seconds:2}},
+      {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:'https://www.youtube.com/tv?v='+vid}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')))}
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
     if(S.live&&central.length)S.send({type:'execute_script',sequence:[{delay:{seconds:d}},{action:'homeassistant.turn_off',target:{entity_id:central},continue_on_error:true}]}).catch(e=>toast('Φώτα: '+(e&&e.message||'σφάλμα')));
     S.pendingLed={at:Date.now()+d*1000,color:'#ff0000',until:Date.now()+d*1000+120000};
