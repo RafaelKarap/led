@@ -376,7 +376,7 @@ async function runMode(id){
     toast(`Work mode: ${lights.length?'το Κεντρικό Φως άναψε':'δεν βρέθηκε Κεντρικό Φως'}${n?', οι ταινίες έγιναν μπλε':' (οι ταινίες δεν είναι συνδεδεμένες)'}`);
     closeSheet();render();return;
   }
-  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);extra+=err?` · μουσική: ${err.toLowerCase()}`:', 🎵 παίζει'}
+  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);extra+=err?` · μουσική: ${err}`:', 🎵 παίζει'}
   if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
   const m=BUILTIN.find(x=>x.id===id);
   toast(id==='elena'?`${m.name}: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${extra}`:`${m.name}: ${plan.length?`έκλεισαν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}`:'όλα ήταν ήδη κλειστά'}${extra}`);
@@ -461,25 +461,35 @@ function renderSheet(){
 }
 function spEntity(){return [...S.st.keys()].find(k=>k.startsWith('media_player.spotify'))}
 function toUri(link){const m=String(link).match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|album|playlist|artist|episode)\/([A-Za-z0-9]+)/);if(m)return `spotify:${m[1]}:${m[2]}`;if(/^spotify:(track|album|playlist|artist|episode):[A-Za-z0-9]+$/.test(link))return link;return null}
-async function playUri(uri,seek){
-  if(!S.live)return 'Δεν υπάρχει σύνδεση με το σπίτι';
-  const ent=spEntity();if(!ent)return 'Δεν βρέθηκε το Spotify στο Home Assistant';
+async function rawCall(dom,svc,id,data={}){return S.send({type:'call_service',domain:dom,service:svc,service_data:data,target:{entity_id:id}})}
+async function spReady(ent){
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const can=()=>((S.st.get(ent)?.attributes.supported_features||0)&512)!==0;
+  if(can())return null;
+  const sf=S.st.get(ent)?.attributes.supported_features||0;
+  if(sf===0)return 'το Home Assistant δεν βλέπει Premium λογαριασμό';
+  const src=S.spSource||(S.st.get(ent)?.attributes.source_list||[])[0];
+  if(!src)return 'άνοιξε το Spotify στο κινητό και διάλεξε συσκευή στις Ρυθμίσεις';
+  try{await rawCall('media_player','select_source',ent,{source:src})}catch(e){return 'δεν βρέθηκε η συσκευή «'+src+'». Άνοιξε το Spotify στο κινητό'}
+  for(let i=0;i<6;i++){await wait(1500);try{await rawCall('homeassistant','update_entity',ent)}catch(e){}await wait(700);if(can())return null}
+  return 'το Spotify δεν ενεργοποιήθηκε. Άνοιξε την εφαρμογή Spotify στο κινητό';
+}
+async function playUri(uri,seek){
+  if(!S.live)return 'δεν υπάρχει σύνδεση με το σπίτι';
+  const ent=spEntity();if(!ent)return 'δεν βρέθηκε το Spotify στο Home Assistant';
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const err=await spReady(ent);if(err)return err;
   const cur=S.st.get(ent)?.attributes.source;
-  if(S.spSource&&cur!==S.spSource){await call('media_player','select_source',ent,{source:S.spSource});await wait(2000)}
-  await call('media_player','play_media',ent,{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'});
-  if(seek){await wait(3000);await call('media_player','media_seek',ent,{seek_position:seek});await wait(1500);if(S.st.get(ent)?.state!=='playing')await call('media_player','media_play',ent)}
+  if(S.spSource&&cur&&cur!==S.spSource){try{await rawCall('media_player','select_source',ent,{source:S.spSource});await wait(1500)}catch(e){}}
+  try{await rawCall('media_player','play_media',ent,{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'})}catch(e){return e&&e.message||'δεν ξεκίνησε η αναπαραγωγή'}
+  if(seek){await wait(2500);try{await rawCall('media_player','media_seek',ent,{seek_position:seek})}catch(e){}await wait(1500);try{await rawCall('homeassistant','update_entity',ent)}catch(e){}await wait(700);if(S.st.get(ent)?.state!=='playing'){try{await rawCall('media_player','media_play',ent)}catch(e){}}}
   return null;
 }
 async function playSong(i){
   const song=S.songs[i];if(!song)return;
-  if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');return}
-  const ent=spEntity();if(!ent){toast('Δεν βρέθηκε το Spotify στο Home Assistant');return}
-  const cur=S.st.get(ent)?.attributes.source;
-  if(S.spSource&&cur!==S.spSource){await call('media_player','select_source',ent,{source:S.spSource});await new Promise(r=>setTimeout(r,2000))}
-  const type=song.uri.split(':')[1]==='track'?'music':'playlist';
-  await call('media_player','play_media',ent,{media_content_id:song.uri,media_content_type:type});
-  toast('🎵 '+song.name);
+  toast('🎵 Ξεκινάει: '+song.name);
+  const err=await playUri(song.uri,0);
+  toast(err?'Μουσική: '+err:'🎵 '+song.name);
 }
 function renderLedMore(){
   $('#sheet').innerHTML=`<div class="grab"></div><h3>Προστέθηκε: ${esc(S.sheet.name)}</h3>
