@@ -27,6 +27,7 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wrap{max-width:760px;margin:0 auto;padding:22px 16px 48px}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1 .ver{font-family:var(--font);font-size:.36em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:.6em;vertical-align:middle;white-space:nowrap}
 h1{font-family:var(--display);font-size:calc(40px*var(--fs));line-height:1;font-weight:700;letter-spacing:-.01em;margin:4px 0 8px}
 .summary{color:var(--muted);margin:0}
 .summary b{color:var(--ink);font-weight:600}
@@ -169,7 +170,7 @@ body.offline .mode:not(.exit),body.offline .mcard:not(.exit){opacity:.55}
 <div class="wrap">
   <header class="top">
     <div>
-      <h1 id="greet">Καλησπέρα</h1>
+      <h1><span id="greet">Καλησπέρα</span><span class="ver" id="ver"></span></h1>
       <p class="summary" id="summary"></p>
     </div>
     <button class="iconbtn" id="settingsBtn" aria-label="Ρυθμίσεις"></button>
@@ -209,6 +210,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const APP_VERSION=24;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -796,6 +798,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='spSrc'){S.spSource=e.target.value.trim();store.set('home.spSource',S.spSource)}});
 $('#dlg').addEventListener('close',()=>{S.sheet=null});
 $('#settingsBtn').innerHTML=svg('gear');
+$('#ver').textContent='v'+APP_VERSION;
 document.querySelectorAll('[data-ic]').forEach(el=>el.outerHTML=svg(el.dataset.ic));
 
 applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
