@@ -193,6 +193,10 @@ const BUILTIN=[
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'}];
 const S={songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
+const idb={open(){return new Promise((res,rej)=>{const r=indexedDB.open('spiti',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async get(k){try{const db=await idb.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
+  async set(k,v){try{const db=await idb.open();db.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}};
+function saveCfg(){store.set('home.cfg',S.cfg);idb.set('home.cfg',S.cfg)}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2800)}
 function applyTheme(){
   let t=S.theme;if(t==='auto'){const h=new Date().getHours();t=h>=7&&h<19?'day':'night'}
@@ -208,16 +212,17 @@ function connect(){
   setStatus('connecting');
   let ws;try{ws=new WebSocket(url.replace(/\/+$/,'').replace(/^http/i,'ws')+'/api/websocket')}catch(e){setStatus('error','Η διεύθυνση δεν είναι σωστή.');return}
   S.ws=ws;let n=1;const reqs={};
+  clearTimeout(S.cto);S.cto=setTimeout(()=>{if(!S.live&&S.ws===ws){ws.onclose=null;try{ws.close()}catch(e){}setStatus('error','Το σπίτι δεν απαντά. Έλεγξε ότι το Tailscale είναι ανοιχτό και ότι το laptop και το Home Assistant τρέχουν.');clearTimeout(S.retry);S.retry=setTimeout(connect,10000)}},10000);
   S.send=m=>new Promise((res,rej)=>{const id=n++;reqs[id]={res,rej};ws.send(JSON.stringify({...m,id}))});
   ws.onmessage=e=>{
     const m=JSON.parse(e.data);
     if(m.type==='auth_required')ws.send(JSON.stringify({type:'auth',access_token:token}));
-    else if(m.type==='auth_invalid'){ws.onclose=null;ws.close();S.live=false;setStatus('error','Το token δεν έγινε δεκτό. Βάλε νέο στις ρυθμίσεις.')}
+    else if(m.type==='auth_invalid'){clearTimeout(S.cto);ws.onclose=null;ws.close();S.live=false;setStatus('error','Το token δεν έγινε δεκτό από το Home Assistant. Φτιάξε νέο και βάλ’ το στις Ρυθμίσεις.')}
     else if(m.type==='auth_ok')boot();
     else if(m.type==='result'&&reqs[m.id]){m.success?reqs[m.id].res(m.result):reqs[m.id].rej(m.error);delete reqs[m.id]}
     else if(m.type==='event'&&m.event&&m.event.event_type==='state_changed'){const d=m.event.data;if(d.new_state)S.st.set(d.entity_id,d.new_state);else S.st.delete(d.entity_id);schedule()}
   };
-  ws.onclose=()=>{S.live=false;setStatus('error','Δεν υπάρχει σύνδεση με το σπίτι. Είναι ανοιχτό το Tailscale;');render();clearTimeout(S.retry);S.retry=setTimeout(connect,6000)};
+  ws.onclose=()=>{clearTimeout(S.cto);S.live=false;setStatus('error','Δεν υπάρχει σύνδεση με το σπίτι. Έλεγξε το Tailscale και ότι το laptop είναι ανοιχτό.');render();clearTimeout(S.retry);S.retry=setTimeout(connect,6000)};
 }
 async function boot(){
   try{
@@ -228,7 +233,7 @@ async function boot(){
     S.reg=new Map(en.status==='fulfilled'?en.value.map(r=>[r.entity_id,r]):[]);
     S.dev=new Map(dv.status==='fulfilled'?dv.value.map(d=>[d.id,d]):[]);
     await S.send({type:'subscribe_events',event_type:'state_changed'});
-    S.live=true;setStatus('ok');render();
+    clearTimeout(S.cto);S.live=true;setStatus('ok');render();toast('Συνδέθηκε με το σπίτι');
   }catch(e){setStatus('error','Συνδέθηκε, αλλά δεν διαβάστηκαν οι συσκευές.')}
 }
 function schedule(){if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;render()})}
@@ -592,7 +597,7 @@ document.addEventListener('click',async e=>{
     const url=$('#haUrl').value.trim().replace(/\/+$/,''),token=$('#haTok').value.trim();
     if(!/^https?:\/\//i.test(url)){$('#err').textContent='Η διεύθυνση πρέπει να ξεκινά με https://';return}
     if(!token){$('#err').textContent='Συμπλήρωσε το token.';return}
-    S.cfg={url,token};store.set('home.cfg',S.cfg);closeSheet();connect();return;
+    S.cfg={url,token};saveCfg();closeSheet();connect();return;
   }
   if(e.target===$('#dlg')){closeSheet();return}
   const act=e.target.closest('[data-act]');
@@ -636,7 +641,12 @@ document.querySelectorAll('[data-ic]').forEach(el=>el.outerHTML=svg(el.dataset.i
 applyTheme();setInterval(()=>{if(S.theme==='auto')applyTheme();render()},60000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 render();
-if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+(async()=>{
+  if(!S.cfg.token){const b=await idb.get('home.cfg');if(b&&b.token){S.cfg=Object.assign({url:DEFAULT_URL},b);store.set('home.cfg',S.cfg)}}
+  else idb.set('home.cfg',S.cfg);
+  if(S.cfg.token)connect();else{setStatus('error','Λείπει το token του Home Assistant.');setTimeout(openSettings,400)}
+})();
 ledAuto();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ledAuto();if(S.cfg.token&&!S.live)connect()}});
 setInterval(()=>{if(document.visibilityState==='visible'&&[...S.strips.values()].some(s=>s.state!=='ready'))ledAuto()},20000);
