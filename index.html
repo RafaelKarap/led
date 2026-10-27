@@ -377,7 +377,17 @@ function openSpotifyApp(uri){
   const a=document.createElement('a');a.href=uri;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
 }
 async function runMode(id){
-  if(id==='elena')openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
+  if(id==='elena'){
+    openSpotifyApp('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq');
+    const music=playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);
+    toast('❤️ Elena mode…');
+    await new Promise(r=>setTimeout(r,3000));
+    const plan=modePlan('elena');plan.forEach(offAction);
+    let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}
+    const err=await music;
+    toast(`Elena mode: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)'}${err?` · μουσική: ${err}`:', 🎵 παίζει'}`);
+    closeSheet();render();return;
+  }
   const plan=modePlan(id);plan.forEach(offAction);
   let extra='';
   if(id==='movie'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=40;await ledSend(s,F.power(true));await ledColor(s,'#b46bff');await ledSend(s,F.bright(40));n++}if(!n)extra=' (οι ταινίες δεν είναι συνδεδεμένες)'}
