@@ -212,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=30;
+const APP_VERSION=31;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -227,7 +227,8 @@ const BUILTIN=[
 {id:'elena',name:'Elena mode',icon:'heart',desc:'Παίζει το τραγούδι, ανοίγει το βίντεο στην τηλεόραση, σβήνει το Κεντρικό Φως και κάνει τις ταινίες κόκκινες.'},
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'},
 {id:'workout',name:'Pre-workout',icon:'gym',desc:'Δυνατό φως, ταινίες στο χρώμα σου, η μουσική σου και κλιματισμός αν θες.'}];
-const S={wo:Object.assign({color:'#2fe07a',light:true,link:'',ac:0},store.get('home.wo',{})),elenaYt:store.get('home.elenaYt','https://www.youtube.com/watch?v=mSX3OyW9Rao'),elenaTv:store.get('home.elenaTv',true),elenaDelay:store.get('home.elenaDelay',5),elenaSeek:store.get('home.elenaSeek',48),spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const WO_DEF='https://www.youtube.com/watch?v=vyR0XyuGiC4&t=125s';
+const S={wo:(()=>{const w=Object.assign({color:'#2fe07a',light:true,link:'',ac:0},store.get('home.wo',{}));if(!w.link&&!w.linkSet)w.link=WO_DEF;return w})(),elenaYt:store.get('home.elenaYt','https://www.youtube.com/watch?v=mSX3OyW9Rao'),elenaTv:store.get('home.elenaTv',true),elenaDelay:store.get('home.elenaDelay',5),elenaSeek:store.get('home.elenaSeek',48),spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 const idb={open(){return new Promise((res,rej)=>{const r=indexedDB.open('spiti',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
   async get(k){try{const db=await idb.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
@@ -342,6 +343,18 @@ function washerInfo(c){
 }
 function stripsOf(c){return c.kind==='ledgrp'?[...S.strips.values()]:[S.strips.get(c.id.slice(4))].filter(Boolean)}
 function isLed(c){return c.kind==='led'||c.kind==='ledgrp'}
+function ytStart(u){const m=String(u||'').match(/[?&#]t=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?/);if(!m)return 0;return (+(m[1]||0))*3600+(+(m[2]||0))*60+(+(m[3]||0))}
+function tvYoutube(vid,start){
+  const tv=cards().find(c=>isTv(c)&&c.area==='Σαλόνι')||cards().find(isTv);if(!tv||!S.live)return false;const t={entity_id:tv.id};
+  S.send({type:'execute_script',sequence:[
+    {action:'media_player.turn_on',target:t,continue_on_error:true},
+    {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
+    {delay:{seconds:4}},
+    {action:'webostv.command',target:t,data:{command:'system.launcher/close',payload:{id:'youtube.leanback.v4'}},continue_on_error:true},
+    {delay:{seconds:2}},
+    {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:'https://www.youtube.com/tv?v='+vid+(start?'&t='+start:'')}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')));
+  return true;
+}
 function isTv(c){return c.kind==='media_player'&&!c.id.startsWith('media_player.spotify')}
 function ytId(u){const m=String(u||'').match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(/^[A-Za-z0-9_-]{11}$/.test(u)?u:null)}
 function isOn(c){
@@ -460,8 +473,9 @@ function openSpotifyApp(uri){
 }
 async function runMode(id){
   if(id==='workout'){
-    const w=S.wo,uri=w.link?toUri(w.link):null;
+    const w=S.wo,yv=ytId(w.link),uri=!yv&&w.link?toUri(w.link):null;
     if(uri)openSpotifyApp(uri);
+    if(yv&&!tvYoutube(yv,ytStart(w.link)))toast('Δεν βρέθηκε τηλεόραση για το YouTube');
     if(w.light)cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)&&!isOn(c)).forEach(c=>call(c.kind,'turn_on',c.id));
     const ent=spEntity();
     if(uri&&ent){const t={entity_id:ent},seq=[];
@@ -471,7 +485,7 @@ async function runMode(id){
     if(w.ac>0){const ac=cards().find(c=>c.kind==='climate'&&c.area==='Σαλόνι')||cards().find(c=>c.kind==='climate');
       if(ac)S.send({type:'execute_script',sequence:[{action:'climate.set_hvac_mode',target:{entity_id:ac.id},data:{hvac_mode:'cool'},continue_on_error:true},{delay:{seconds:2}},{action:'climate.set_temperature',target:{entity_id:ac.id},data:{temperature:w.ac},continue_on_error:true}]}).catch(()=>{})}
     let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=100;await ledSend(s,F.power(true));await ledColor(s,w.color);await ledSend(s,F.bright(100));ledPersist(s);n++}
-    toast('💪 Pre-workout'+(n?'':' (οι ταινίες δεν είναι συνδεδεμένες)')+(uri?'':' · βάλε μουσική στις Ρυθμίσεις'));
+    toast('💪 Pre-workout'+(n?'':' (οι ταινίες δεν είναι συνδεδεμένες)')+(uri||yv?'':' · βάλε μουσική στις Ρυθμίσεις'));
     closeSheet();render();return;
   }
   if(id==='elena'){
@@ -711,7 +725,7 @@ function renderSettings(){
   <div class="sect"><h4>💪 Pre-workout</h4>
   <div class="ctl"><label><span>Χρώμα ταινιών</span></label><div class="row" style="justify-content:flex-start;align-items:center">${['#2fe07a','#ff3b3b','#ff8a1f','#1e90ff','#b46bff','#ffffff'].map(x=>`<button class="dot" style="width:40px;background:${x}" data-wocolor="${x}" aria-label="Χρώμα ${x}" aria-pressed="${S.wo.color===x}"></button>`).join('')}<label class="dot picker" style="width:40px" aria-label="Δικό σου χρώμα"><input type="color" id="woPick" value="${S.wo.color}"></label></div></div>
   <label class="chk"><input type="checkbox" id="woLight" ${S.wo.light?'checked':''}><span>Άναψε το Κεντρικό Φως</span></label>
-  <label class="field"><span>Μουσική: link τραγουδιού ή playlist από το Spotify</span><input id="woLink" inputmode="url" value="${esc(S.wo.link)}" placeholder="https://open.spotify.com/playlist/..."></label>
+  <label class="field"><span>Μουσική: link από Spotify (παίζει στο κινητό/ηχείο) ή YouTube (παίζει στην τηλεόραση, μαζί με το &t= για το σημείο έναρξης)</span><input id="woLink" inputmode="url" value="${esc(S.wo.link)}" placeholder="https://open.spotify.com/... ή https://www.youtube.com/watch?v=..."></label>
   <div class="ctl"><label for="woAc"><span>Κλιματιστικό σαλονιού (ψύξη)</span><span id="woAcOut">${S.wo.ac?S.wo.ac+'°':'Χωρίς αλλαγή'}</span></label><input id="woAc" type="range" min="0" max="27" step="1" value="${S.wo.ac}"></div>
   <p class="help">Βάλε το κλιματιστικό στο 0 για να μην το πειράζει.</p></div>
   <div class="sect"><h4>Spotify: τα τραγούδια μου</h4>
@@ -848,7 +862,7 @@ document.addEventListener('change',e=>{
   if(k==='ledpick'){stripsOf(c).filter(s=>s.state==='ready').forEach(s=>ledColor(s,e.target.value));renderSheet()}
   e.target.blur();
 });
-document.addEventListener('change',e=>{if(e.target.id==='woPick'){S.wo.color=e.target.value;store.set('home.wo',S.wo);return}if(e.target.id==='woLink'){const v=e.target.value.trim();if(v&&!toUri(v)){toast('Το link του Spotify δεν αναγνωρίστηκε');return}S.wo.link=v;store.set('home.wo',S.wo);toast(v?'Αποθηκεύτηκε η μουσική':'Χωρίς μουσική');return}if(e.target.id==='elYt'){const v=e.target.value.trim();if(!ytId(v)){toast('Το link του YouTube δεν αναγνωρίστηκε');return}S.elenaYt=v;store.set('home.elenaYt',v);toast('Αποθηκεύτηκε το βίντεο');return}if(e.target.id==='spSrc'){S.spSource=e.target.value.trim();store.set('home.spSource',S.spSource)}});
+document.addEventListener('change',e=>{if(e.target.id==='woPick'){S.wo.color=e.target.value;store.set('home.wo',S.wo);return}if(e.target.id==='woLink'){const v=e.target.value.trim();if(v&&!toUri(v)&&!ytId(v)){toast('Το link δεν αναγνωρίστηκε (Spotify ή YouTube)');return}S.wo.link=v;S.wo.linkSet=true;store.set('home.wo',S.wo);toast(v?'Αποθηκεύτηκε η μουσική':'Χωρίς μουσική');return}if(e.target.id==='elYt'){const v=e.target.value.trim();if(!ytId(v)){toast('Το link του YouTube δεν αναγνωρίστηκε');return}S.elenaYt=v;store.set('home.elenaYt',v);toast('Αποθηκεύτηκε το βίντεο');return}if(e.target.id==='spSrc'){S.spSource=e.target.value.trim();store.set('home.spSource',S.spSource)}});
 $('#dlg').addEventListener('close',()=>{S.sheet=null});
 $('#settingsBtn').innerHTML=svg('gear');
 $('#ver').textContent='v'+APP_VERSION;
