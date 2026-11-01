@@ -216,12 +216,12 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=37;
+const APP_VERSION=38;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
 const TV_MAC={smart_tv_pro:'bc:09:b9:97:dd:98',webos:'60:ab:14:9b:c0:d4'};
-const TV_APPS=[['Netflix','https://www.netflix.com/title'],['YouTube','https://www.youtube.com'],['MagentaTV','market://launch?id=gr.cosmote.cosmotetv.androidtv'],['Spotify','https://open.spotify.com']];
+const TV_APPS=[['Netflix','netflix://'],['YouTube','https://www.youtube.com'],['MagentaTV','market://launch?id=gr.cosmote.cosmotetv.androidtv'],['Spotify','spotify://']];
 function appLogo(n){
   const s=String(n).toLowerCase(),o=(b,x)=>`<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="${b}"/>${x}</svg>`;
   const t=(b,txt,sz)=>o(b,`<text x="24" y="${sz>14?31:29}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="${sz}" fill="#fff">${txt}</text>`);
