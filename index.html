@@ -212,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=32;
+const APP_VERSION=33;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -225,6 +225,7 @@ function tvMac(id){const k=Object.keys(TV_MAC).find(x=>id.includes(x));return k?
 function remoteOf(id){const r=S.reg.get(id);if(!r||!r.device_id)return null;for(const [eid,rr] of S.reg){if(rr.device_id===r.device_id&&eid.startsWith('remote.')&&S.st.has(eid))return eid}return null}
 function tvMain(){const l=cards().filter(c=>isTv(c));return l.find(c=>/webos/.test(c.id))||l[0]}
 async function tvWake(c){
+  if(c.remote)return call('remote','send_command',c.remote,{command:'POWER'});
   await call('media_player','turn_on',c.id);
   const mac=tvMac(c.id);
   if(mac)try{await S.send({type:'call_service',domain:'wake_on_lan',service:'send_magic_packet',service_data:{mac}})}catch(e){}
@@ -418,6 +419,7 @@ function primary(c){
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return;if(s.state==='ready')return ledPower(s,!s.on);return ledConnect(s)}
   if(c.kind==='washer')return openSheet(c);
   const s=S.st.get(c.id);if(!s)return;
+  if(isTv(c)&&c.remote)return tvWake(c);
   if(isTv(c))return ['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id);
   if(s.state==='unavailable')return;
   if(['light','switch','fan'].includes(c.kind))return call(c.kind,'toggle',c.id);
@@ -868,7 +870,7 @@ document.addEventListener('click',async e=>{
       tdown:()=>call('climate','set_temperature',c.id,{temperature:Math.max(a.min_temp??16,(a.temperature??22)-step)}),
       mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
-      tvpower:()=>['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
+      tvpower:()=>c.remote||['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
       tvkey:()=>c.remote&&call('remote','send_command',c.remote,{command:sv.dataset.v}),
       tvapp:()=>c.remote&&call('remote','turn_on',c.remote,{activity:sv.dataset.v}),
       mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
