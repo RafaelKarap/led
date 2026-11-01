@@ -84,6 +84,10 @@ dialog[open]{animation:up .28s cubic-bezier(.2,.8,.2,1)}
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .pill{border:1px solid var(--card-border);background:var(--surface);border-radius:14px;padding:12px 16px;font-weight:500;min-width:64px}
 .pill[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
+.app{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 6px 9px;border-radius:16px;border:1px solid var(--card-border);background:var(--surface);color:var(--ink);font-size:.8em;font-weight:500;line-height:1.1;text-align:center}
+.app svg{width:46px;height:46px;border-radius:12px;display:block}
+.app[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
 .round{width:60px;height:60px;border-radius:50%;border:1px solid var(--card-border);background:var(--surface);display:grid;place-items:center}
 .round svg{width:24px;height:24px}
 .ctl{margin:16px 0}
@@ -212,12 +216,25 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=36;
+const APP_VERSION=37;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
 const TV_MAC={smart_tv_pro:'bc:09:b9:97:dd:98',webos:'60:ab:14:9b:c0:d4'};
 const TV_APPS=[['Netflix','https://www.netflix.com/title'],['YouTube','https://www.youtube.com'],['MagentaTV','market://launch?id=gr.cosmote.cosmotetv.androidtv'],['Spotify','https://open.spotify.com']];
+function appLogo(n){
+  const s=String(n).toLowerCase(),o=(b,x)=>`<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="${b}"/>${x}</svg>`;
+  const t=(b,txt,sz)=>o(b,`<text x="24" y="${sz>14?31:29}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="${sz}" fill="#fff">${txt}</text>`);
+  if(s.includes('netflix'))return o('#000','<rect x="15" y="9" width="6" height="30" fill="#b20710"/><rect x="27" y="9" width="6" height="30" fill="#b20710"/><path d="M15 9h6l12 30h-6z" fill="#e50914"/>');
+  if(s.includes('youtube'))return o('#fff','<rect x="5" y="12" width="38" height="24" rx="7" fill="#f00"/><path d="M20 18v12l10.5-6z" fill="#fff"/>');
+  if(s.includes('spotify'))return o('#000','<circle cx="24" cy="24" r="17" fill="#1db954"/><path d="M14.5 19.5c6.5-2 14.5-1.5 20 1.8M15.5 25.5c5.5-1.6 11.5-1.2 16.5 1.4M16.5 31c4.4-1.2 9-.8 13 1.2" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/>');
+  if(s.includes('magenta')||s.includes('cosmote'))return t('#e20074','M',26);
+  if(s.includes('prime')||s.includes('amazon'))return t('#00a8e1','prime',12);
+  if(s.includes('disney'))return t('#0b2a8f','D+',20);
+  if(s.includes('hdmi'))return t('#3a4350','HDMI',12);
+  if(s.includes('tv')||s.includes('live')||s.includes('κανάλια'))return t('#3a4350','TV',20);
+  return t('#4b5563',esc(String(n).trim().charAt(0).toUpperCase()||'?'),22);
+}
 const TV_KEYS=[['▲','DPAD_UP'],['◀','DPAD_LEFT'],['OK','DPAD_CENTER'],['▶','DPAD_RIGHT'],['▼','DPAD_DOWN']];
 function tvIsMain(id){return /^media_player\.smart_tv_pro$/.test(id)}
 function tvName(id,s){return 'TCL'}
@@ -236,7 +253,7 @@ function tvRemote(c){
     <div class="row" style="margin:6px 0">${TV_KEYS.map(k=>`<button class="pill" data-svc="tvkey" data-v="${k[1]}">${k[0]}</button>`).join('')}</div>
     <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="POWER">Power</button><button class="pill" data-svc="tvkey" data-v="SLEEP">Ύπνος</button><button class="pill" data-svc="tvkey" data-v="BACK">Πίσω</button><button class="pill" data-svc="tvkey" data-v="HOME">Αρχική</button><button class="pill" data-svc="tvkey" data-v="MUTE">Σίγαση</button></div>
     <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="VOLUME_DOWN">Ένταση −</button><button class="pill" data-svc="tvkey" data-v="VOLUME_UP">Ένταση +</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_DOWN">Κανάλι −</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_UP">Κανάλι +</button></div></div>
-    <div class="ctl"><label><span>Εφαρμογές</span></label><div class="row" style="justify-content:flex-start">${TV_APPS.map(x=>`<button class="pill" data-svc="tvapp" data-v="${esc(x[1])}">${esc(x[0])}</button>`).join('')}</div></div>`;
+    <div class="ctl"><label><span>Εφαρμογές</span></label><div class="apps">${TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`).join('')}</div></div>`;
 }
 const DOMS=['light','switch','climate','vacuum','fan','media_player'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
@@ -689,7 +706,7 @@ function renderSheet(){
     const v=Math.round((a.volume_level??0)*100),src=a.source_list||[];
     body=(isTv(c)?`<button class="power" data-svc="tvpower" style="margin:0 0 14px">${['off','standby','unavailable'].includes(s.state)?'Άναμμα τηλεόρασης':'Σβήσιμο τηλεόρασης'}</button>`+tvRemote(c):'')+`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
     <div class="ctl"><label for="mvol"><span>Ένταση</span><span data-out>${v}%</span></label><input id="mvol" type="range" min="0" max="100" value="${v}" data-k="mvol"></div>
-    ${src.length?`<div class="ctl"><label><span>Παίζει σε</span></label><div class="row" style="justify-content:flex-start">${src.map(x=>`<button class="pill" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}">${esc(x)}</button>`).join('')}</div></div>`:''}`;
+    ${src.length?`<div class="ctl"><label><span>Παίζει σε</span></label>${isTv(c)?`<div class="apps">${src.map(x=>`<button class="app" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}" aria-label="${esc(x)}">${appLogo(x)}<span>${esc(x)}</span></button>`).join('')}</div>`:`<div class="row" style="justify-content:flex-start">${src.map(x=>`<button class="pill" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}">${esc(x)}</button>`).join('')}</div>`}</div>`:''}`;
   }
   sh.innerHTML=`<div class="grab"></div><h3>${esc(c.name)}</h3><p class="sub">${esc(c.area)}, ${esc(stateText(c))}</p>${body}`;
 }
