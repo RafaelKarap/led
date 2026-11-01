@@ -212,7 +212,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=33;
+const APP_VERSION=34;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -234,7 +234,7 @@ function tvRemote(c){
   if(!c.remote)return '';
   return `<div class="ctl"><label><span>Χειριστήριο</span></label>
     <div class="row" style="margin:6px 0">${TV_KEYS.map(k=>`<button class="pill" data-svc="tvkey" data-v="${k[1]}">${k[0]}</button>`).join('')}</div>
-    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="BACK">Πίσω</button><button class="pill" data-svc="tvkey" data-v="HOME">Αρχική</button><button class="pill" data-svc="tvkey" data-v="MUTE">Σίγαση</button></div>
+    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="POWER">Power</button><button class="pill" data-svc="tvkey" data-v="SLEEP">Ύπνος</button><button class="pill" data-svc="tvkey" data-v="BACK">Πίσω</button><button class="pill" data-svc="tvkey" data-v="HOME">Αρχική</button><button class="pill" data-svc="tvkey" data-v="MUTE">Σίγαση</button></div>
     <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="VOLUME_DOWN">Ένταση −</button><button class="pill" data-svc="tvkey" data-v="VOLUME_UP">Ένταση +</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_DOWN">Κανάλι −</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_UP">Κανάλι +</button></div></div>
     <div class="ctl"><label><span>Εφαρμογές</span></label><div class="row" style="justify-content:flex-start">${TV_APPS.map(x=>`<button class="pill" data-svc="tvapp" data-v="${esc(x[1])}">${esc(x[0])}</button>`).join('')}</div></div>`;
 }
@@ -419,7 +419,7 @@ function primary(c){
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return;if(s.state==='ready')return ledPower(s,!s.on);return ledConnect(s)}
   if(c.kind==='washer')return openSheet(c);
   const s=S.st.get(c.id);if(!s)return;
-  if(isTv(c)&&c.remote)return tvWake(c);
+  if(isTv(c)&&c.remote)return isOn(c)?call('remote','send_command',c.remote,{command:'SLEEP'}):tvWake(c);
   if(isTv(c))return ['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id);
   if(s.state==='unavailable')return;
   if(['light','switch','fan'].includes(c.kind))return call(c.kind,'toggle',c.id);
@@ -870,7 +870,7 @@ document.addEventListener('click',async e=>{
       tdown:()=>call('climate','set_temperature',c.id,{temperature:Math.max(a.min_temp??16,(a.temperature??22)-step)}),
       mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
-      tvpower:()=>c.remote||['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
+      tvpower:()=>c.remote?(isOn(c)?call('remote','send_command',c.remote,{command:'SLEEP'}):tvWake(c)):['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
       tvkey:()=>c.remote&&call('remote','send_command',c.remote,{command:sv.dataset.v}),
       tvapp:()=>c.remote&&call('remote','turn_on',c.remote,{activity:sv.dataset.v}),
       mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
