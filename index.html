@@ -212,12 +212,12 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=34;
+const APP_VERSION=35;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
 const TV_MAC={smart_tv_pro:'bc:09:b9:97:dd:98',webos:'60:ab:14:9b:c0:d4'};
-const TV_APPS=[['Netflix','com.netflix.ninja'],['YouTube','https://www.youtube.com'],['Prime Video','com.amazon.amazonvideo.livingroom'],['Disney+','com.disney.disneyplus']];
+const TV_APPS=[['Netflix','https://www.netflix.com/title'],['YouTube','https://www.youtube.com'],['Prime Video','https://app.primevideo.com'],['Disney+','https://www.disneyplus.com']];
 const TV_KEYS=[['▲','DPAD_UP'],['◀','DPAD_LEFT'],['OK','DPAD_CENTER'],['▶','DPAD_RIGHT'],['▼','DPAD_DOWN']];
 function tvIsMain(id){return /^media_player\.smart_tv_pro$/.test(id)}
 function tvName(id,s){return 'TCL'}
