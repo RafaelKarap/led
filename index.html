@@ -215,7 +215,28 @@ const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v)
 const APP_VERSION=31;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
-const ORDER=['Σαλόνι','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
+const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
+const TV_MAC={smart_tv_pro:'bc:09:b9:97:dd:98',webos:'60:ab:14:9b:c0:d4'};
+const TV_APPS=[['Netflix','com.netflix.ninja'],['YouTube','https://www.youtube.com'],['Prime Video','com.amazon.amazonvideo.livingroom'],['Disney+','com.disney.disneyplus']];
+const TV_KEYS=[['▲','DPAD_UP'],['◀','DPAD_LEFT'],['OK','DPAD_CENTER'],['▶','DPAD_RIGHT'],['▼','DPAD_DOWN']];
+function tvIsMain(id){return /^media_player\.smart_tv_pro$/.test(id)}
+function tvName(id,s){return 'TCL'}
+function tvMac(id){const k=Object.keys(TV_MAC).find(x=>id.includes(x));return k?TV_MAC[k]:null}
+function remoteOf(id){const r=S.reg.get(id);if(!r||!r.device_id)return null;for(const [eid,rr] of S.reg){if(rr.device_id===r.device_id&&eid.startsWith('remote.')&&S.st.has(eid))return eid}return null}
+function tvMain(){const l=cards().filter(c=>isTv(c));return l.find(c=>/webos/.test(c.id))||l[0]}
+async function tvWake(c){
+  await call('media_player','turn_on',c.id);
+  const mac=tvMac(c.id);
+  if(mac)try{await S.send({type:'call_service',domain:'wake_on_lan',service:'send_magic_packet',service_data:{mac}})}catch(e){}
+}
+function tvRemote(c){
+  if(!c.remote)return '';
+  return `<div class="ctl"><label><span>Χειριστήριο</span></label>
+    <div class="row" style="margin:6px 0">${TV_KEYS.map(k=>`<button class="pill" data-svc="tvkey" data-v="${k[1]}">${k[0]}</button>`).join('')}</div>
+    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="BACK">Πίσω</button><button class="pill" data-svc="tvkey" data-v="HOME">Αρχική</button><button class="pill" data-svc="tvkey" data-v="MUTE">Σίγαση</button></div>
+    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="VOLUME_DOWN">Ένταση −</button><button class="pill" data-svc="tvkey" data-v="VOLUME_UP">Ένταση +</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_DOWN">Κανάλι −</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_UP">Κανάλι +</button></div></div>
+    <div class="ctl"><label><span>Εφαρμογές</span></label><div class="row" style="justify-content:flex-start">${TV_APPS.map(x=>`<button class="pill" data-svc="tvapp" data-v="${esc(x[1])}">${esc(x[0])}</button>`).join('')}</div></div>`;
+}
 const DOMS=['light','switch','climate','vacuum','fan','media_player'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
 const VAC={cleaning:'Καθαρίζει',docked:'Στη βάση',returning:'Επιστρέφει',idle:'Αδρανής',paused:'Σε παύση',error:'Σφάλμα',unavailable:'Μη διαθέσιμη'};
@@ -324,6 +345,7 @@ function cards(){
       const r=S.reg.get(id);if(hidden(r))continue;
       if(r&&r.device_id&&washers.has(r.device_id))continue;
       const isSp=id.startsWith('media_player.spotify');
+      if(tvIsMain(id)){out.push({kind:dom,id,area:'Elenas Home',name:tvName(id,s),remote:remoteOf(id)});continue}
       out.push({kind:dom,id,area:isSp?'Μουσική':areaName(areaOf(id)),name:isSp?'Spotify':cleanName(s.attributes.friendly_name||id)});
     }
   }
@@ -345,7 +367,7 @@ function stripsOf(c){return c.kind==='ledgrp'?[...S.strips.values()]:[S.strips.g
 function isLed(c){return c.kind==='led'||c.kind==='ledgrp'}
 function ytStart(u){const m=String(u||'').match(/[?&#]t=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?/);if(!m)return 0;return (+(m[1]||0))*3600+(+(m[2]||0))*60+(+(m[3]||0))}
 function tvYoutube(vid,start){
-  const tv=cards().find(c=>isTv(c)&&c.area==='Σαλόνι')||cards().find(isTv);if(!tv||!S.live)return false;const t={entity_id:tv.id};
+  const tv=tvMain();if(!tv||!S.live)return false;const t={entity_id:tv.id};
   S.send({type:'execute_script',sequence:[
     {action:'media_player.turn_on',target:t,continue_on_error:true},
     {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
@@ -380,6 +402,7 @@ function stateText(c){
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return '';if(s.state==='ready')return s.on?`Αναμμένη, ${s.bri}%`:'Σβηστή';if(s.state==='connecting')return 'Σύνδεση…';return 'Πάτα για σύνδεση (μόνο στο σπίτι)'}
   if(c.kind==='washer'){const w=washerInfo(c);return w.run&&w.mins!=null?`${w.text}, ${w.mins}′`:w.text}
   const s=S.st.get(c.id);if(!s)return '';const a=s.attributes;
+  if(isTv(c)&&s.state==='unavailable')return 'Κλειστή, πάτα για άναμμα';
   if(s.state==='unavailable')return 'Μη διαθέσιμο';
   if(c.kind==='light'&&s.state==='on'&&a.brightness!=null)return `Αναμμένο, ${Math.round(a.brightness/2.55)}%`;
   if(c.kind==='climate'){if(s.state==='off')return a.current_temperature!=null?`Σβηστό, χώρος ${a.current_temperature}°`:'Σβηστό';return `${MODES[s.state]||s.state}, στους ${a.temperature??'–'}°`}
@@ -394,7 +417,9 @@ function primary(c){
   if(c.kind==='ledgrp'){const L=stripsOf(c);if(L.some(s=>s.state!=='ready'))return ledConnectAll(L);const on=!L.some(s=>s.on);L.forEach(s=>ledPower(s,on));return}
   if(c.kind==='led'){const s=S.strips.get(c.id.slice(4));if(!s)return;if(s.state==='ready')return ledPower(s,!s.on);return ledConnect(s)}
   if(c.kind==='washer')return openSheet(c);
-  const s=S.st.get(c.id);if(!s||s.state==='unavailable')return;
+  const s=S.st.get(c.id);if(!s)return;
+  if(isTv(c))return ['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id);
+  if(s.state==='unavailable')return;
   if(['light','switch','fan'].includes(c.kind))return call(c.kind,'toggle',c.id);
   if(c.kind==='climate')return call('climate',s.state==='off'?'turn_on':'turn_off',c.id);
   if(c.kind==='vacuum')return call('vacuum',s.state==='cleaning'?'return_to_base':'start',c.id);
@@ -500,7 +525,7 @@ async function runMode(id){
       seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true},{delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
       S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
     }
-    const tv=cards().find(c=>isTv(c)&&c.area==='Σαλόνι')||cards().find(isTv),vid=ytId(S.elenaYt);
+    const tv=tvMain(),vid=ytId(S.elenaYt);
     if(S.live&&S.elenaTv&&tv&&vid){const t={entity_id:tv.id};S.send({type:'execute_script',sequence:[
       {action:'media_player.turn_on',target:t,continue_on_error:true},
       {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
@@ -598,7 +623,7 @@ function rowd(c){
 }
 function tile(c){
   if(c.kind==='ledadd')return `<div class="tile" role="button" tabindex="0" data-card="ledadd" data-act="ledadd" aria-label="Προσθήκη ταινιών LED"><span class="ic">${svg('led')}</span><div><div class="name">Ταινίες LED</div><div class="st">Πάτα για προσθήκη, μόνο στο σπίτι</div></div></div>`;
-  const t=tone(c),s=S.st.get(c.id),na=c.kind!=='led'&&c.kind!=='washer'&&(!s||s.state==='unavailable');
+  const t=tone(c),s=S.st.get(c.id),na=c.kind!=='led'&&c.kind!=='washer'&&!isTv(c)&&(!s||s.state==='unavailable');
   const det=hasSheet(c);
   if(c.kind==='washer'){
     const w=washerInfo(c),pct=w.run&&w.mins!=null?Math.max(5,Math.min(95,100-Math.round(w.mins/1.5))):0;
@@ -660,7 +685,7 @@ function renderSheet(){
   }
   if(c.kind==='media_player'){
     const v=Math.round((a.volume_level??0)*100),src=a.source_list||[];
-    body=(isTv(c)?`<button class="power" data-svc="tvpower" style="margin:0 0 14px">${['off','standby'].includes(s.state)?'Άναμμα τηλεόρασης':'Σβήσιμο τηλεόρασης'}</button>`:'')+`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
+    body=(isTv(c)?`<button class="power" data-svc="tvpower" style="margin:0 0 14px">${['off','standby','unavailable'].includes(s.state)?'Άναμμα τηλεόρασης':'Σβήσιμο τηλεόρασης'}</button>`+tvRemote(c):'')+`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
     <div class="ctl"><label for="mvol"><span>Ένταση</span><span data-out>${v}%</span></label><input id="mvol" type="range" min="0" max="100" value="${v}" data-k="mvol"></div>
     ${src.length?`<div class="ctl"><label><span>Παίζει σε</span></label><div class="row" style="justify-content:flex-start">${src.map(x=>`<button class="pill" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}">${esc(x)}</button>`).join('')}</div></div>`:''}`;
   }
@@ -843,7 +868,9 @@ document.addEventListener('click',async e=>{
       tdown:()=>call('climate','set_temperature',c.id,{temperature:Math.max(a.min_temp??16,(a.temperature??22)-step)}),
       mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
-      tvpower:()=>call('media_player',['off','standby'].includes(s.state)?'turn_on':'turn_off',c.id),
+      tvpower:()=>['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
+      tvkey:()=>c.remote&&call('remote','send_command',c.remote,{command:sv.dataset.v}),
+      tvapp:()=>c.remote&&call('remote','turn_on',c.remote,{activity:sv.dataset.v}),
       mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
       msrc:()=>call('media_player','select_source',c.id,{source:sv.dataset.v}),
       vstart:()=>call('vacuum','start',c.id),vpause:()=>call('vacuum','pause',c.id),vdock:()=>call('vacuum','return_to_base',c.id)})[k]?.();
