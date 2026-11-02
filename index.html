@@ -216,7 +216,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=40;
+const APP_VERSION=41;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -541,7 +541,7 @@ async function runMode(id){
     if(S.live&&ent){
       const t={entity_id:ent},seq=[];
       if(S.spSource)seq.push({action:'media_player.select_source',target:t,data:{source:S.spSource},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
-      const sk=S.elenaSeek,upd={action:'homeassistant.update_entity',target:t,continue_on_error:true},seek={action:'media_player.media_seek',target:t,data:{seek_position:sk},continue_on_error:true},behind={condition:'template',value_template:`{{ (state_attr('${ent}','media_position')|int(0)) < ${Math.max(0,sk-2)} }}`};
+      const sk=0,upd={action:'homeassistant.update_entity',target:t,continue_on_error:true},seek={action:'media_player.media_seek',target:t,data:{seek_position:sk},continue_on_error:true},behind={condition:'template',value_template:`{{ (state_attr('${ent}','media_position')|int(0)) < ${Math.max(0,sk-2)} }}`};
       seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true});if(sk>0)seq.push({delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
       S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
     }
@@ -575,7 +575,7 @@ async function runMode(id){
     toast(`Work mode: ${lights.length?'το Κεντρικό Φως άναψε':'δεν βρέθηκε Κεντρικό Φως'}${n?', οι ταινίες έγιναν μπλε':' (οι ταινίες δεν είναι συνδεδεμένες)'}`);
     closeSheet();render();return;
   }
-  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:1P7pKK5A5DYbIx6g7941Tw',48);extra+=err?` · μουσική: ${err}`:', 🎵 παίζει'}
+  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:1P7pKK5A5DYbIx6g7941Tw',0);extra+=err?` · μουσική: ${err}`:', 🎵 παίζει'}
   if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
   const m=BUILTIN.find(x=>x.id===id);
   toast(id==='elena'?`${m.name}: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${extra}`:`${m.name}: ${plan.length?`έκλεισαν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}`:'όλα ήταν ήδη κλειστά'}${extra}`);
@@ -763,7 +763,6 @@ function renderSettings(){
   <p class="help">Το token το φτιάχνεις στο Home Assistant: όνομά σου κάτω αριστερά → Security → Long-lived access tokens → Create token. Το Tailscale πρέπει να είναι ανοιχτό στο κινητό.</p></div>
   <div class="sect"><h4>❤️ Elena mode</h4>
   <div class="ctl"><label for="elDelay"><span>Τα φώτα αλλάζουν μετά από</span><span id="elDelayOut">${S.elenaDelay}″</span></label><input id="elDelay" type="range" min="0" max="20" step="1" value="${S.elenaDelay}"></div>
-  <div class="ctl"><label for="elSeek"><span>Το τραγούδι ξεκινάει από</span><span id="elSeekOut">${Math.floor(S.elenaSeek/60)}:${String(S.elenaSeek%60).padStart(2,'0')}</span></label><input id="elSeek" type="range" min="0" max="180" step="1" value="${S.elenaSeek}"></div>
   <label class="chk"><input type="checkbox" id="elTvChk" ${S.elenaTv?'checked':''}><span>Άναψε την τηλεόραση του σαλονιού και παίξε βίντεο στο YouTube</span></label>
   <label class="field"><span>Βίντεο YouTube (link)</span><input id="elYt" inputmode="url" value="${esc(S.elenaYt)}" placeholder="https://www.youtube.com/watch?v=..."></label>
   <p class="help">Οι αλλαγές αποθηκεύονται αμέσως.</p></div>
