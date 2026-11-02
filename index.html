@@ -216,7 +216,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=44;
+const APP_VERSION=45;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -390,14 +390,10 @@ function tvYoutube(vid,start){
     {action:'media_player.turn_on',target:t,continue_on_error:true},
     {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
     {delay:{seconds:2}},
-    {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true},
+    {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:start?'https://www.youtube.com/tv?v='+vid+'&t='+start:vid}},continue_on_error:true},
     {wait_template:`{{ 'youtube' in (state_attr('${tv.id}','source')|string|lower) }}`,timeout:'00:00:15',continue_on_timeout:true},
-    {delay:{seconds:1}},
-    {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true},
-    {delay:{seconds:3}},
-    {action:'webostv.command',target:t,data:{command:'system.launcher/close',payload:{id:'youtube.leanback.v4'}},continue_on_error:true},
-    {delay:{seconds:1}},
-    {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:'https://www.youtube.com/tv?v='+vid+(start?'&t='+start:'')}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')));
+    {delay:{seconds:2}},
+    {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')));
   return true;
 }
 function isTv(c){return c.kind==='media_player'&&!c.id.startsWith('media_player.spotify')}
