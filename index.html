@@ -216,7 +216,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=50;
+const APP_VERSION=51;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -524,10 +524,7 @@ async function runMode(id){
     if(yv&&!tvYoutube(yv,ytStart(w.link)))toast('Δεν βρέθηκε τηλεόραση για το YouTube');
     if(w.light)cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)&&!isOn(c)).forEach(c=>call(c.kind,'turn_on',c.id));
     const ent=spEntity();
-    if(uri&&ent){const t={entity_id:ent},seq=[];
-      if(S.spSource)seq.push({action:'media_player.select_source',target:t,data:{source:S.spSource},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
-      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:uri.split(':')[1]==='track'?'music':'playlist'},continue_on_error:true});
-      S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')))}
+    if(uri&&ent)playUri(uri,0).then(err=>{if(err)toast('Μουσική: '+err)});
     if(w.ac>0){const ac=cards().find(c=>c.kind==='climate'&&c.area==='Σαλόνι')||cards().find(c=>c.kind==='climate');
       if(ac)S.send({type:'execute_script',sequence:[{action:'climate.set_hvac_mode',target:{entity_id:ac.id},data:{hvac_mode:'cool'},continue_on_error:true},{delay:{seconds:2}},{action:'climate.set_temperature',target:{entity_id:ac.id},data:{temperature:w.ac},continue_on_error:true}]}).catch(()=>{})}
     let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;s.bri=100;await ledSend(s,F.power(true));await ledColor(s,w.color);await ledSend(s,F.bright(100));ledPersist(s);n++}
