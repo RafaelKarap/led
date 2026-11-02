@@ -222,7 +222,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=54;
+const APP_VERSION=55;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -267,7 +267,7 @@ function tvRemote(c){
     ${REM_KEYS.map(k=>`<button class="rk${k[0].startsWith('HDMI')?' hd':''}" data-svc="tvkey" data-v="${k[0]}" style="left:${k[2]}%;top:${k[3]}%" aria-label="${k[1]}">${k[1]}</button>`).join('')}</div>`;
 }
 function tvApps(c,src,a){
-  const list=c.remote?TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`):src.filter(x=>!/^(HDMI|AV|Component)/i.test(x)).map(x=>`<button class="app" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}" aria-label="${esc(x)}">${appLogo(x)}<span>${esc(x)}</span></button>`);
+  const list=c.remote?TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`):src.filter(x=>/^(netflix|youtube|spotify|magenta)/i.test(x)).map(x=>`<button class="app" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}" aria-label="${esc(x)}">${appLogo(x)}<span>${esc(x)}</span></button>`);
   return list.length?`<div class="ctl"><label><span>Εφαρμογές</span></label><div class="apps">${list.join('')}</div></div>`:'';
 }
 const DOMS=['light','switch','climate','vacuum','fan','media_player'];
