@@ -88,6 +88,8 @@ dialog[open]{animation:up .28s cubic-bezier(.2,.8,.2,1)}
 .rem svg{position:absolute;inset:0;width:100%;height:100%}
 .rk{position:absolute;transform:translate(-50%,-50%);width:16%;aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:#e9edf3;font:600 19px system-ui;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rk:active{background:#ffffff26}
+.rk.hd{width:23%;aspect-ratio:auto;height:6.2%;border-radius:99px;background:#2a303b;font:700 10px system-ui;color:#c4cad6}
+.rk.hd:active{background:#2196f3;color:#fff}
 .apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
 .app{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 6px 9px;border-radius:16px;border:1px solid var(--card-border);background:var(--surface);color:var(--ink);font-size:.8em;font-weight:500;line-height:1.1;text-align:center}
 .app svg{width:46px;height:46px;border-radius:12px;display:block}
@@ -220,7 +222,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=52;
+const APP_VERSION=53;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -252,18 +254,17 @@ async function tvWake(c){
   if(mac)try{await S.send({type:'call_service',domain:'wake_on_lan',service:'send_magic_packet',service_data:{mac}})}catch(e){}
 }
 const LG_KEYS={DPAD_UP:'UP',DPAD_DOWN:'DOWN',DPAD_LEFT:'LEFT',DPAD_RIGHT:'RIGHT',DPAD_CENTER:'ENTER',VOLUME_UP:'VOLUMEUP',VOLUME_DOWN:'VOLUMEDOWN',CHANNEL_UP:'CHANNELUP',CHANNEL_DOWN:'CHANNELDOWN'};
-const REM_KEYS=[['POWER','⏻',20,10.36],['MUTE','🔇',80,10.36],['DPAD_UP','▲',50,24.64],['DPAD_LEFT','◀',23.33,38.93],['DPAD_CENTER','OK',50,38.93],['DPAD_RIGHT','▶',76.67,38.93],['DPAD_DOWN','▼',50,53.21],['BACK','↩',25,66.43],['HOME','⌂',75,66.43],['VOLUME_UP','+',26.67,80.71],['VOLUME_DOWN','−',26.67,92.86],['CHANNEL_UP','+',73.33,80.71],['CHANNEL_DOWN','−',73.33,92.86]];
+const REM_KEYS=[['POWER','⏻',20,10.36],['MUTE','🔇',80,10.36],['DPAD_UP','▲',50,24.64],['DPAD_LEFT','◀',23.33,38.93],['DPAD_CENTER','OK',50,38.93],['DPAD_RIGHT','▶',76.67,38.93],['DPAD_DOWN','▼',50,53.21],['BACK','↩',25,66.43],['HOME','⌂',75,66.43],['VOLUME_UP','+',26.67,80.71],['VOLUME_DOWN','−',26.67,92.86],['CHANNEL_UP','+',73.33,80.71],['CHANNEL_DOWN','−',73.33,92.86],['HDMI1','HDMI 1',50,80.71],['HDMI2','HDMI 2',50,92.86]];
 function tvKey(c,k){
+  if(k==='HDMI1'||k==='HDMI2')return c.remote?call('remote','send_command',c.remote,{command:'TV_INPUT_'+k.replace('HDMI','HDMI_')}):call('media_player','select_source',c.id,{source:k.replace('HDMI','HDMI ')});
   if(c.remote)return call('remote','send_command',c.remote,{command:k});
   if(k==='POWER')return ['off','standby','unavailable'].includes(S.st.get(c.id)?.state)?tvWake(c):call('media_player','turn_off',c.id);
   return call('webostv','button',c.id,{button:LG_KEYS[k]||k});
 }
 function tvRemote(c){
   const brand=c.remote?'TCL':'LG';
-  return `<div class="ctl"><label><span>Χειριστήριο</span></label>
-    <div class="rem"><svg viewBox="0 0 300 560" aria-hidden="true"><rect x="2" y="2" width="296" height="556" rx="44" fill="#1a1e26" stroke="#2d3440" stroke-width="3"/><circle cx="60" cy="58" r="28" fill="#e53935"/><circle cx="240" cy="58" r="28" fill="#2a303b"/><text x="150" y="64" text-anchor="middle" font-family="Arial" font-weight="700" font-size="18" fill="#778" letter-spacing="3">${brand}</text><circle cx="150" cy="218" r="108" fill="#2a303b"/><circle cx="150" cy="218" r="44" fill="#1a1e26" stroke="#2196f3" stroke-width="3"/><circle cx="75" cy="372" r="28" fill="#2a303b"/><circle cx="225" cy="372" r="28" fill="#2a303b"/><rect x="45" y="425" width="70" height="115" rx="35" fill="#2a303b"/><rect x="185" y="425" width="70" height="115" rx="35" fill="#2a303b"/><text x="80" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">VOL</text><text x="220" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">CH</text></svg>
-    ${REM_KEYS.map(k=>`<button class="rk" data-svc="tvkey" data-v="${k[0]}" style="left:${k[2]}%;top:${k[3]}%" aria-label="${k[0]}">${k[1]}</button>`).join('')}</div></div>
-    ${c.remote?`<div class="ctl"><label><span>Εφαρμογές</span></label><div class="apps">${TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`).join('')}</div></div>`:''}`;
+  return `<div class="rem"><svg viewBox="0 0 300 560" aria-hidden="true"><rect x="2" y="2" width="296" height="556" rx="44" fill="#1a1e26" stroke="#2d3440" stroke-width="3"/><circle cx="60" cy="58" r="28" fill="#e53935"/><circle cx="240" cy="58" r="28" fill="#2a303b"/><text x="150" y="64" text-anchor="middle" font-family="Arial" font-weight="700" font-size="18" fill="#778" letter-spacing="3">${brand}</text><circle cx="150" cy="218" r="108" fill="#2a303b"/><circle cx="150" cy="218" r="44" fill="#1a1e26" stroke="#2196f3" stroke-width="3"/><circle cx="75" cy="372" r="28" fill="#2a303b"/><circle cx="225" cy="372" r="28" fill="#2a303b"/><rect x="45" y="425" width="70" height="115" rx="35" fill="#2a303b"/><rect x="185" y="425" width="70" height="115" rx="35" fill="#2a303b"/><text x="80" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">VOL</text><text x="220" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">CH</text></svg>
+    ${REM_KEYS.map(k=>`<button class="rk${k[0].startsWith('HDMI')?' hd':''}" data-svc="tvkey" data-v="${k[0]}" style="left:${k[2]}%;top:${k[3]}%" aria-label="${k[1]}">${k[1]}</button>`).join('')}</div>`;
 }
 const DOMS=['light','switch','climate','vacuum','fan','media_player'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
@@ -698,7 +699,7 @@ function renderSheet(){
   }
   if(c.kind==='media_player'){
     const v=Math.round((a.volume_level??0)*100),src=a.source_list||[];
-    body=(isTv(c)?`<button class="power" data-svc="tvpower" style="margin:0 0 14px">${['off','standby','unavailable'].includes(s.state)?'Άναμμα τηλεόρασης':'Σβήσιμο τηλεόρασης'}</button>`+tvRemote(c):'')+`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
+    body=isTv(c)?tvRemote(c):`<div class="row" style="margin:6px 0 10px"><button class="round" data-svc="mprev" aria-label="Προηγούμενο">${svg('prev')}</button><button class="round" data-svc="mpp" aria-label="Αναπαραγωγή ή παύση">${svg(s.state==='playing'?'pause':'play')}</button><button class="round" data-svc="mnext" aria-label="Επόμενο">${svg('next')}</button></div>
     <div class="ctl"><label for="mvol"><span>Ένταση</span><span data-out>${v}%</span></label><input id="mvol" type="range" min="0" max="100" value="${v}" data-k="mvol"></div>
     ${src.length?`<div class="ctl"><label><span>Παίζει σε</span></label>${isTv(c)?`<div class="apps">${src.map(x=>`<button class="app" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}" aria-label="${esc(x)}">${appLogo(x)}<span>${esc(x)}</span></button>`).join('')}</div>`:`<div class="row" style="justify-content:flex-start">${src.map(x=>`<button class="pill" data-svc="msrc" data-v="${esc(x)}" aria-pressed="${a.source===x}">${esc(x)}</button>`).join('')}</div>`}</div>`:''}`;
   }
