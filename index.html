@@ -221,7 +221,7 @@ const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
 const TV_MAC={smart_tv_pro:'bc:09:b9:97:dd:98',webos:'60:ab:14:9b:c0:d4'};
-const TV_APPS=[['Netflix','netflix://'],['YouTube','https://www.youtube.com'],['MagentaTV','market://launch?id=gr.cosmote.cosmotetv.androidtv'],['Spotify','spotify://']];
+const TV_APPS=[['Netflix','netflix://'],['YouTube','https://www.youtube.com'],['MagentaTV','keys:HOME,DPAD_DOWN,ENTER,ENTER,DPAD_UP,ENTER'],['Spotify','spotify://']];
 function appLogo(n){
   const s=String(n).toLowerCase(),o=(b,x)=>`<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="${b}"/>${x}</svg>`;
   const t=(b,txt,sz)=>o(b,`<text x="24" y="${sz>14?31:29}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="${sz}" fill="#fff">${txt}</text>`);
@@ -267,7 +267,7 @@ const BUILTIN=[
 {id:'work',name:'Work mode',icon:'work',desc:'Ανάβει το Κεντρικό Φως και τις ταινίες σε φωτεινό μπλε.'},
 {id:'workout',name:'Pre-workout',icon:'gym',desc:'Δυνατό φως, ταινίες στο χρώμα σου, η μουσική σου και κλιματισμός αν θες.'}];
 const WO_DEF='https://www.youtube.com/watch?v=vyR0XyuGiC4&t=125s';
-const S={wo:(()=>{const w=Object.assign({color:'#2fe07a',light:true,link:'',ac:0},store.get('home.wo',{}));if(!w.link&&!w.linkSet)w.link=WO_DEF;return w})(),elenaYt:store.get('home.elenaYt','https://www.youtube.com/watch?v=mSX3OyW9Rao'),elenaTv:store.get('home.elenaTv',true),elenaDelay:store.get('home.elenaDelay',5),elenaSeek:store.get('home.elenaSeek',48),spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
+const S={wo:(()=>{const w=Object.assign({color:'#2fe07a',light:true,link:'',ac:0},store.get('home.wo',{}));if(!w.link&&!w.linkSet)w.link=WO_DEF;return w})(),elenaYt:store.get('home.elenaYt','https://www.youtube.com/watch?v=mSX3OyW9Rao'),elenaTv:store.get('home.elenaTv',true),elenaDelay:store.get('home.elenaDelay',5),elenaSeek:store.get('home.elenaSeek',0),spOpen:store.get('home.spOpen',true),songs:store.get('home.songs',[]),spSource:store.get('home.spSource',''),ledGroup:store.get('home.ledGroup',true),view:'home',modeClean:false,cfg:Object.assign({url:DEFAULT_URL,token:''},store.get('home.cfg',{})),theme:store.get('home.theme','night'),ws:null,send:null,live:false,st:new Map(),reg:new Map(),dev:new Map(),areas:new Map(),room:'all',sheet:null,strips:new Map(),raf:0};
 
 const idb={open(){return new Promise((res,rej)=>{const r=indexedDB.open('spiti',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
   async get(k){try{const db=await idb.open();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}},
@@ -533,7 +533,8 @@ async function runMode(id){
     closeSheet();render();return;
   }
   if(id==='elena'){
-    const uri='spotify:track:3pepZAOvUCBt3qWi9Ax6Aq';
+    if(!S.live)for(let i=0;i<40&&!S.live;i++)await new Promise(r=>setTimeout(r,250));
+    const uri='spotify:track:1P7pKK5A5DYbIx6g7941Tw';
     openSpotifyApp(uri);
     if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');}
     const ent=spEntity(),d=S.elenaDelay;
@@ -541,7 +542,7 @@ async function runMode(id){
       const t={entity_id:ent},seq=[];
       if(S.spSource)seq.push({action:'media_player.select_source',target:t,data:{source:S.spSource},continue_on_error:true},{delay:{seconds:2}},{action:'homeassistant.update_entity',target:t,continue_on_error:true});
       const sk=S.elenaSeek,upd={action:'homeassistant.update_entity',target:t,continue_on_error:true},seek={action:'media_player.media_seek',target:t,data:{seek_position:sk},continue_on_error:true},behind={condition:'template',value_template:`{{ (state_attr('${ent}','media_position')|int(0)) < ${Math.max(0,sk-2)} }}`};
-      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true},{delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
+      seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true});if(sk>0)seq.push({delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
       S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
     }
     const tv=tvMain(),vid=ytId(S.elenaYt);
@@ -574,7 +575,7 @@ async function runMode(id){
     toast(`Work mode: ${lights.length?'το Κεντρικό Φως άναψε':'δεν βρέθηκε Κεντρικό Φως'}${n?', οι ταινίες έγιναν μπλε':' (οι ταινίες δεν είναι συνδεδεμένες)'}`);
     closeSheet();render();return;
   }
-  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:3pepZAOvUCBt3qWi9Ax6Aq',48);extra+=err?` · μουσική: ${err}`:', 🎵 παίζει'}
+  if(id==='elena'){let n=0;for(const s of S.strips.values())if(s.state==='ready'){s.on=true;await ledSend(s,F.power(true));await ledColor(s,'#ff0000');n++}extra=n?', οι ταινίες έγιναν κόκκινες':' (οι ταινίες δεν είναι συνδεδεμένες)';const err=await playUri('spotify:track:1P7pKK5A5DYbIx6g7941Tw',48);extra+=err?` · μουσική: ${err}`:', 🎵 παίζει'}
   if(id==='exit'&&S.modeClean){const v=cards().find(c=>c.kind==='vacuum');if(v){call('vacuum','start',v.id);extra=', ο Jeffrey ξεκίνησε'}}
   const m=BUILTIN.find(x=>x.id===id);
   toast(id==='elena'?`${m.name}: ${plan.length?'το Κεντρικό Φως έσβησε':'το Κεντρικό Φως ήταν ήδη σβηστό'}${extra}`:`${m.name}: ${plan.length?`έκλεισαν ${plan.length} ${plan.length===1?'συσκευή':'συσκευές'}`:'όλα ήταν ήδη κλειστά'}${extra}`);
@@ -841,7 +842,7 @@ function ledColor(s,h){s.color=h;s.on=true;ledPersist(s);render();return ledSend
 document.addEventListener('click',async e=>{
   const sc=e.target.closest('[data-scene]');if(sc){const id=sc.dataset.scene;call(id.split('.')[0],'turn_on',id);toast('Ενεργοποιήθηκε: '+sc.textContent.trim());return}
   const nv=e.target.closest('[data-nav]');if(nv){if(nv.dataset.nav==='settings'){openSettings();return}S.view=nv.dataset.nav;window.scrollTo(0,0);render();return}
-  const md=e.target.closest('[data-mode]');if(md&&!S.live&&md.dataset.mode!=='exit'){toast('Περίμενε 1–2″ να συνδεθεί με το σπίτι και ξαναπάτα');return}
+  const md=e.target.closest('[data-mode]');if(md&&!S.live&&md.dataset.mode!=='exit'&&md.dataset.mode!=='elena'){toast('Περίμενε 1–2″ να συνδεθεί με το σπίτι και ξαναπάτα');return}
   if(md){if(md.dataset.mode==='exit'){S.sheet={kind:'mode',id:'exit'};renderModeSheet();const g=$('#dlg');if(!g.open)g.showModal()}else runMode(md.dataset.mode);return}
   const rmode=e.target.closest('[data-runmode]');if(rmode){runMode(rmode.dataset.runmode);return}
   if(e.target.id==='exitClean'){S.modeClean=e.target.checked;return}
@@ -889,7 +890,7 @@ document.addEventListener('click',async e=>{
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
       tvpower:()=>c.remote?(isOn(c)?call('remote','send_command',c.remote,{command:'SLEEP'}):tvWake(c)):['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
       tvkey:()=>c.remote&&call('remote','send_command',c.remote,{command:sv.dataset.v}),
-      tvapp:()=>c.remote&&call('remote','turn_on',c.remote,{activity:sv.dataset.v}),
+      tvapp:()=>{if(!c.remote)return;const v=sv.dataset.v;return v.startsWith('keys:')?call('remote','send_command',c.remote,{command:v.slice(5).split(','),delay_secs:1.5}):call('remote','turn_on',c.remote,{activity:v})},
       mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
       msrc:()=>call('media_player','select_source',c.id,{source:sv.dataset.v}),
       vstart:()=>call('vacuum','start',c.id),vpause:()=>call('vacuum','pause',c.id),vdock:()=>call('vacuum','return_to_base',c.id)})[k]?.();
