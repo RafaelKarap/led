@@ -216,7 +216,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=41;
+const APP_VERSION=42;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -390,6 +390,10 @@ function tvYoutube(vid,start){
     {action:'media_player.turn_on',target:t,continue_on_error:true},
     {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
     {delay:{seconds:4}},
+    {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true},
+    {delay:{seconds:7}},
+    {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true},
+    {delay:{seconds:4}},
     {action:'webostv.command',target:t,data:{command:'system.launcher/close',payload:{id:'youtube.leanback.v4'}},continue_on_error:true},
     {delay:{seconds:2}},
     {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:'https://www.youtube.com/tv?v='+vid+(start?'&t='+start:'')}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')));
@@ -545,18 +549,8 @@ async function runMode(id){
       seq.push({action:'media_player.play_media',target:t,data:{media_content_id:uri,media_content_type:'music'},continue_on_error:true});if(sk>0)seq.push({delay:{seconds:2}},upd,{delay:{seconds:1}},seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek,{delay:{seconds:2}},upd,{if:[behind],then:[seek]}]});
       S.send({type:'execute_script',sequence:seq}).catch(e=>toast('Μουσική: '+(e&&e.message||'σφάλμα')));
     }
-    const tv=tvMain(),vid=ytId(S.elenaYt);
-    if(S.live&&S.elenaTv&&tv&&vid){const t={entity_id:tv.id};S.send({type:'execute_script',sequence:[
-      {action:'media_player.turn_on',target:t,continue_on_error:true},
-      {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
-      {delay:{seconds:4}},
-      {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:vid}},continue_on_error:true},
-      {delay:{seconds:7}},
-      {action:'webostv.button',target:t,data:{button:'ENTER'},continue_on_error:true},
-      {delay:{seconds:4}},
-      {action:'webostv.command',target:t,data:{command:'system.launcher/close',payload:{id:'youtube.leanback.v4'}},continue_on_error:true},
-      {delay:{seconds:2}},
-      {action:'webostv.command',target:t,data:{command:'system.launcher/launch',payload:{id:'youtube.leanback.v4',contentId:'https://www.youtube.com/tv?v='+vid}},continue_on_error:true}]}).catch(e=>toast('Τηλεόραση: '+(e&&e.message||'σφάλμα')))}
+    const vid=ytId(S.elenaYt);
+    if(S.elenaTv&&vid)tvYoutube(vid,0);
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
     if(S.live&&central.length)S.send({type:'execute_script',sequence:[{delay:{seconds:d}},{action:'homeassistant.turn_off',target:{entity_id:central},continue_on_error:true}]}).catch(e=>toast('Φώτα: '+(e&&e.message||'σφάλμα')));
     S.pendingLed={at:Date.now()+d*1000,color:'#ff0000',until:Date.now()+d*1000+120000};
