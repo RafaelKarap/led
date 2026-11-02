@@ -84,6 +84,10 @@ dialog[open]{animation:up .28s cubic-bezier(.2,.8,.2,1)}
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .pill{border:1px solid var(--card-border);background:var(--surface);border-radius:14px;padding:12px 16px;font-weight:500;min-width:64px}
 .pill[aria-pressed="true"]{background:var(--pill);color:var(--pill-ink)}
+.rem{position:relative;width:min(100%,260px);aspect-ratio:300/560;margin:8px auto 14px}
+.rem svg{position:absolute;inset:0;width:100%;height:100%}
+.rk{position:absolute;transform:translate(-50%,-50%);width:16%;aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:#e9edf3;font:600 19px system-ui;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rk:active{background:#ffffff26}
 .apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
 .app{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 6px 9px;border-radius:16px;border:1px solid var(--card-border);background:var(--surface);color:var(--ink);font-size:.8em;font-weight:500;line-height:1.1;text-align:center}
 .app svg{width:46px;height:46px;border-radius:12px;display:block}
@@ -216,7 +220,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=51;
+const APP_VERSION=52;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -247,13 +251,19 @@ async function tvWake(c){
   const mac=tvMac(c.id);
   if(mac)try{await S.send({type:'call_service',domain:'wake_on_lan',service:'send_magic_packet',service_data:{mac}})}catch(e){}
 }
+const LG_KEYS={DPAD_UP:'UP',DPAD_DOWN:'DOWN',DPAD_LEFT:'LEFT',DPAD_RIGHT:'RIGHT',DPAD_CENTER:'ENTER',VOLUME_UP:'VOLUMEUP',VOLUME_DOWN:'VOLUMEDOWN',CHANNEL_UP:'CHANNELUP',CHANNEL_DOWN:'CHANNELDOWN'};
+const REM_KEYS=[['POWER','⏻',20,10.36],['MUTE','🔇',80,10.36],['DPAD_UP','▲',50,24.64],['DPAD_LEFT','◀',23.33,38.93],['DPAD_CENTER','OK',50,38.93],['DPAD_RIGHT','▶',76.67,38.93],['DPAD_DOWN','▼',50,53.21],['BACK','↩',25,66.43],['HOME','⌂',75,66.43],['VOLUME_UP','+',26.67,80.71],['VOLUME_DOWN','−',26.67,92.86],['CHANNEL_UP','+',73.33,80.71],['CHANNEL_DOWN','−',73.33,92.86]];
+function tvKey(c,k){
+  if(c.remote)return call('remote','send_command',c.remote,{command:k});
+  if(k==='POWER')return ['off','standby','unavailable'].includes(S.st.get(c.id)?.state)?tvWake(c):call('media_player','turn_off',c.id);
+  return call('webostv','button',c.id,{button:LG_KEYS[k]||k});
+}
 function tvRemote(c){
-  if(!c.remote)return '';
+  const brand=c.remote?'TCL':'LG';
   return `<div class="ctl"><label><span>Χειριστήριο</span></label>
-    <div class="row" style="margin:6px 0">${TV_KEYS.map(k=>`<button class="pill" data-svc="tvkey" data-v="${k[1]}">${k[0]}</button>`).join('')}</div>
-    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="POWER">Power</button><button class="pill" data-svc="tvkey" data-v="SLEEP">Ύπνος</button><button class="pill" data-svc="tvkey" data-v="BACK">Πίσω</button><button class="pill" data-svc="tvkey" data-v="HOME">Αρχική</button><button class="pill" data-svc="tvkey" data-v="MUTE">Σίγαση</button></div>
-    <div class="row" style="margin:6px 0"><button class="pill" data-svc="tvkey" data-v="VOLUME_DOWN">Ένταση −</button><button class="pill" data-svc="tvkey" data-v="VOLUME_UP">Ένταση +</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_DOWN">Κανάλι −</button><button class="pill" data-svc="tvkey" data-v="CHANNEL_UP">Κανάλι +</button></div></div>
-    <div class="ctl"><label><span>Εφαρμογές</span></label><div class="apps">${TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`).join('')}</div></div>`;
+    <div class="rem"><svg viewBox="0 0 300 560" aria-hidden="true"><rect x="2" y="2" width="296" height="556" rx="44" fill="#1a1e26" stroke="#2d3440" stroke-width="3"/><circle cx="60" cy="58" r="28" fill="#e53935"/><circle cx="240" cy="58" r="28" fill="#2a303b"/><text x="150" y="64" text-anchor="middle" font-family="Arial" font-weight="700" font-size="18" fill="#778" letter-spacing="3">${brand}</text><circle cx="150" cy="218" r="108" fill="#2a303b"/><circle cx="150" cy="218" r="44" fill="#1a1e26" stroke="#2196f3" stroke-width="3"/><circle cx="75" cy="372" r="28" fill="#2a303b"/><circle cx="225" cy="372" r="28" fill="#2a303b"/><rect x="45" y="425" width="70" height="115" rx="35" fill="#2a303b"/><rect x="185" y="425" width="70" height="115" rx="35" fill="#2a303b"/><text x="80" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">VOL</text><text x="220" y="488" text-anchor="middle" font-family="Arial" font-weight="700" font-size="11" fill="#778">CH</text></svg>
+    ${REM_KEYS.map(k=>`<button class="rk" data-svc="tvkey" data-v="${k[0]}" style="left:${k[2]}%;top:${k[3]}%" aria-label="${k[0]}">${k[1]}</button>`).join('')}</div></div>
+    ${c.remote?`<div class="ctl"><label><span>Εφαρμογές</span></label><div class="apps">${TV_APPS.map(x=>`<button class="app" data-svc="tvapp" data-v="${esc(x[1])}" aria-label="${esc(x[0])}">${appLogo(x[0])}<span>${esc(x[0])}</span></button>`).join('')}</div></div>`:''}`;
 }
 const DOMS=['light','switch','climate','vacuum','fan','media_player'];
 const MODES={off:'Off',cool:'Ψύξη',heat:'Θέρμανση',heat_cool:'Αυτόματο',auto:'Αυτόματο',dry:'Αφύγρανση',fan_only:'Ανεμιστήρας'};
@@ -875,7 +885,7 @@ document.addEventListener('click',async e=>{
       mode:()=>call('climate','set_hvac_mode',c.id,{hvac_mode:sv.dataset.v}),
       climpower:()=>call('climate',s.state==='off'?'turn_on':'turn_off',c.id),
       tvpower:()=>c.remote?(isOn(c)?call('remote','send_command',c.remote,{command:'SLEEP'}):tvWake(c)):['off','standby','unavailable'].includes(s.state)?tvWake(c):call('media_player','turn_off',c.id),
-      tvkey:()=>c.remote&&call('remote','send_command',c.remote,{command:sv.dataset.v}),
+      tvkey:()=>tvKey(c,sv.dataset.v),
       tvapp:()=>{if(!c.remote)return;const v=sv.dataset.v;return v.startsWith('keys:')?call('remote','send_command',c.remote,{command:v.slice(5).split(','),delay_secs:1.5}):call('remote','turn_on',c.remote,{activity:v})},
       mpp:()=>call('media_player','media_play_pause',c.id),mnext:()=>call('media_player','media_next_track',c.id),mprev:()=>call('media_player','media_previous_track',c.id),
       msrc:()=>call('media_player','select_source',c.id,{source:sv.dataset.v}),
