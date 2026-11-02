@@ -216,7 +216,7 @@ const svg=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const APP_VERSION=47;
+const APP_VERSION=48;
 const DEFAULT_URL='https://homeassistant.tail1abed2.ts.net';
 const AREA_GR={'living room':'Σαλόνι','livingroom':'Σαλόνι','kitchen':'Κουζίνα','bedroom':'Υπνοδωμάτιο','laundry room':'Πλυσταριό','laundry':'Πλυσταριό','bathroom':'Μπάνιο','hallway':'Διάδρομος','οικία':'Σπίτι'};
 const ORDER=['Σαλόνι','Elenas Home','Υπνοδωμάτιο','Κουζίνα','Πλυσταριό','Μουσική'];
@@ -384,8 +384,10 @@ function washerInfo(c){
 function stripsOf(c){return c.kind==='ledgrp'?[...S.strips.values()]:[S.strips.get(c.id.slice(4))].filter(Boolean)}
 function isLed(c){return c.kind==='led'||c.kind==='ledgrp'}
 function ytStart(u){const m=String(u||'').match(/[?&#]t=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?/);if(!m)return 0;return (+(m[1]||0))*3600+(+(m[2]||0))*60+(+(m[3]||0))}
+function dlog(m){let el=document.getElementById('dbg');if(!el){el=document.createElement('pre');el.id='dbg';el.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;max-height:42vh;overflow:auto;margin:0;padding:8px;font:11px/1.35 monospace;background:#000d;color:#9f9;z-index:99;border-radius:8px;white-space:pre-wrap';el.onclick=()=>el.remove();document.body.appendChild(el)}el.textContent+=new Date().toLocaleTimeString('el-GR')+' '+m+'\n';el.scrollTop=1e9}
+function dwatch(id,label){let last='';const t0=Date.now(),iv=setInterval(()=>{const s=S.st.get(id),a=s&&s.attributes||{},cur=[s&&s.state,a.source,a.app_id,a.media_title].join(' | ');if(cur!==last){last=cur;dlog(label+': '+cur)}if(Date.now()-t0>60000)clearInterval(iv)},1000)}
 function tvYoutube(vid,start){
-  const tv=tvMain();if(!tv||!S.live)return false;const t={entity_id:tv.id};
+  const tv=tvMain();if(!tv||!S.live)return false;const t={entity_id:tv.id};dlog('TV: '+tv.id+' ξεκινά YouTube '+vid);dwatch(tv.id,'TV');
   S.send({type:'execute_script',sequence:[
     {action:'media_player.turn_on',target:t,continue_on_error:true},
     {wait_template:`{{ not is_state('${tv.id}','off') }}`,timeout:'00:00:25',continue_on_timeout:true},
@@ -539,7 +541,7 @@ async function runMode(id){
     openSpotifyApp(uri);
     if(!S.live){toast('Δεν υπάρχει σύνδεση με το σπίτι');}
     const ent=spEntity(),d=S.elenaDelay;
-    if(S.live&&ent)playUri(uri,0).then(err=>{if(err)toast('Μουσική: '+err)});
+    if(S.live&&ent){const sp=S.st.get(ent);dlog('Spotify: '+ent+' state='+(sp&&sp.state)+' features='+(sp&&sp.attributes.supported_features)+' source='+(sp&&sp.attributes.source)+' ρυθμισμένη='+S.spSource);dwatch(ent,'Spotify');playUri(uri,0).then(err=>{dlog('playUri: '+(err||'OK'));if(err)toast('Μουσική: '+err)})}else dlog('Spotify: live='+S.live+' ent='+ent);
     const vid=ytId(S.elenaYt);
     if(S.elenaTv&&vid)tvYoutube(vid,0);
     const central=cards().filter(c=>['light','switch'].includes(c.kind)&&/κεντρικ/i.test(c.name)).map(c=>c.id);
